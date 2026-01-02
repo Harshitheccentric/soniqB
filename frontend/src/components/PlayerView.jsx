@@ -164,6 +164,11 @@ function PlayerView({ user }) {
 
                 {/* Track Metadata */}
                 <div className="track-info">
+                    <img
+                        src="/album-placeholder.png"
+                        alt="Album Art"
+                        className="album-art"
+                    />
                     <h3 className="track-title">{currentTrack.title}</h3>
                     <p className="track-artist">{currentTrack.artist}</p>
                     <p className="track-genre">
@@ -228,11 +233,11 @@ function PlayerView({ user }) {
                 {/* Educational Notice */}
                 <div className="info-box">
                     <p>
-                        <strong>Event Logging:</strong> Your listening activity is recorded
-                        to improve future recommendations.
+                        <strong>Event Logging:</strong> All listening activity is recorded
+                        for future ML training.
                     </p>
                     <p className="events-logged">
-                        Events logged: Play, Pause, Skip, Like
+                        Events: Play • Pause • Skip • Like
                     </p>
                 </div>
             </div>

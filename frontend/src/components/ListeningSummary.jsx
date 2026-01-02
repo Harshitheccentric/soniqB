@@ -137,12 +137,12 @@ function ListeningSummary({ user }) {
             {/* Educational Notice */}
             <div className="info-box">
                 <p>
-                    <strong>Data Source:</strong> All statistics are calculated from
-                    listening events stored in the backend.
+                    <strong>Data Source:</strong> Statistics calculated from listening events
+                    stored in the backend database.
                 </p>
                 <p>
-                    <strong>Note:</strong> No ML features are computed on the frontend.
-                    Genre predictions come from the backend (currently null in Phase 2).
+                    <strong>Note:</strong> No ML predictions are performed in the frontend.
+                    Genre data comes from backend (Phase 3+).
                 </p>
             </div>
 

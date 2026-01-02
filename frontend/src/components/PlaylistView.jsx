@@ -81,11 +81,11 @@ function PlaylistView({ user }) {
 
             {/* Auto-playlist placeholder */}
             <div className="auto-playlist-section">
-                <h3>Auto-Generated Playlists</h3>
+                <h3>🤖 Auto-Generated Playlists</h3>
                 <div className="info-box">
                     <p>
-                        <strong>Coming in Future Phases:</strong> Auto-playlists will be
-                        generated using ML-based recommendations.
+                        <strong>Coming in Future Phases:</strong> ML-based auto-playlists
+                        will be generated using your listening patterns.
                     </p>
                     <p>Currently, only manual playlists are supported.</p>
                 </div>
