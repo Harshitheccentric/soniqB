@@ -2,13 +2,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.db import init_db
-from backend.routes import users, tracks, events, playlists
+from backend.routes import users, tracks, events, playlists, ml
 
 # Create FastAPI app
 app = FastAPI(
     title="SoniqB Music Player Backend",
-    description="Phase 1: Clean backend for music player with event logging (No ML)",
-    version="1.0.0"
+    description="Phase 3: Music player with ML-based genre classification and user clustering",
+    version="3.0.0"
 )
 
 # CORS middleware for frontend integration
@@ -32,13 +32,15 @@ app.include_router(users.router)
 app.include_router(tracks.router)
 app.include_router(events.router)
 app.include_router(playlists.router)
+app.include_router(ml.router)
 
 
 @app.get("/")
 def root():
     """Root endpoint."""
     return {
-        "message": "SoniqB Music Player Backend - Phase 1",
-        "note": "ML is not implemented in Phase 1",
+        "message": "SoniqB Music Player Backend - Phase 3",
+        "note": "ML-powered genre classification and user clustering enabled",
         "docs": "/docs"
     }
+

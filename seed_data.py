@@ -41,9 +41,9 @@ def seed_database():
         
         tracks = [
             Track(
-                title="Summer Vibes",
-                artist="DJ Sunshine",
-                audio_path="backend/storage/audio/sample1.mp3",
+                title="VRIGGER - EFN",
+                artist="Unknown Artist",
+                audio_path="backend/storage/audio/VRIGGER - EFN [b-sX0EqZZZI].opus",
                 predicted_genre=None  # No ML in Phase 1
             ),
             Track(

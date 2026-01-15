@@ -62,4 +62,34 @@ export const createPlaylist = async (playlistData) => {
     return response.data;
 };
 
+// ML API calls (Phase 3)
+export const getMLStatus = async () => {
+    const response = await api.get('/ml/status');
+    return response.data;
+};
+
+export const getUserCluster = async (userId) => {
+    const response = await api.get(`/ml/user-cluster/${userId}`);
+    return response.data;
+};
+
+export const classifyTrack = async (trackId) => {
+    const response = await api.post(`/ml/classify/${trackId}`);
+    return response.data;
+};
+
+export const classifyAllTracks = async () => {
+    const response = await api.post('/ml/classify-all');
+    return response.data;
+};
+
+export const calibrateTrack = async (trackId, genre) => {
+    const response = await api.post(`/ml/calibrate/${trackId}`, null, {
+        params: { genre }
+    });
+    return response.data;
+};
+
 export default api;
+
+

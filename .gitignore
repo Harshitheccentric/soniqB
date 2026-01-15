@@ -45,3 +45,11 @@ logs/
 
 # OS
 Thumbs.db
+
+# FMA Dataset (large files)
+backend/fma/fma_metadata/
+backend/fma/fma_small/
+
+# ML Model Weights
+backend/ml/data/*.pt
+backend/ml/data/*.json

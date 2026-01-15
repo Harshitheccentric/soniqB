@@ -37,6 +37,7 @@ class TrackResponse(BaseModel):
     artist: str
     audio_path: str
     predicted_genre: Optional[str] = None
+    genre_confidence: Optional[float] = None
     
     class Config:
         from_attributes = True

@@ -26,7 +26,8 @@ class Track(Base):
     title = Column(String, nullable=False)
     artist = Column(String, nullable=False)
     audio_path = Column(String, nullable=False)
-    predicted_genre = Column(String, nullable=True)  # Nullable, no inference in Phase 1
+    predicted_genre = Column(String, nullable=True)  # ML-predicted genre
+    genre_confidence = Column(Float, nullable=True)  # Prediction confidence (0-1)
     
     # Relationships
     listening_events = relationship("ListeningEvent", back_populates="track")

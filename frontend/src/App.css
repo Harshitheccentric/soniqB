@@ -836,40 +836,165 @@ body {
 }
 
 /* ========================================
-   LOADING AND ERROR STATES
+   ML COMPONENTS (Phase 3)
    ======================================== */
 
-.loading,
-.error {
-  text-align: center;
-  padding: 3rem;
+/* User Cluster Card */
+.cluster-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid #8b5cf6;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 24px rgba(139, 92, 246, 0.2);
+}
+
+.cluster-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cluster-emoji {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.cluster-info {
+  flex: 1;
+}
+
+.cluster-label {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #ffffff;
-  font-size: 1.2rem;
+  margin: 0 0 0.25rem 0;
 }
 
-.error {
-  color: #ff6b6b;
-  background: #181818;
-  border-radius: 10px;
-  border: 1px solid #282828;
+.cluster-description {
+  color: #b3b3b3;
+  font-size: 0.95rem;
+  margin: 0;
 }
 
-.error button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: #1DB954;
-  color: #000000;
-  border: none;
-  border-radius: 24px;
-  cursor: pointer;
-  font-size: 1rem;
+.cluster-radar {
+  margin: 1rem 0;
+}
+
+.ml-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
   font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+/* Genre Badge in Player */
+.genre-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  color: #ffffff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+.genre-badge.unknown {
+  background: #282828;
+  color: #888;
+}
+
+/* ML Info Box */
+.info-box.ml-info {
+  border-left-color: #8b5cf6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, #121212 100%);
+}
+
+.info-box.ml-info strong {
+  color: #8b5cf6;
+}
+
+/* Calibration UI */
+.calibration-section {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 8px;
+  border: 1px dashed #8b5cf6;
+  text-align: center;
+}
+
+.calibrate-trigger {
+  background: transparent;
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.error button:hover {
-  background: #1ed760;
-  transform: scale(1.05);
+.calibrate-trigger:hover {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.calibration-form h4 {
+  font-size: 0.9rem;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.calibration-form input {
+  flex: 1;
+  background: #121212;
+  border: 1px solid #282828;
+  color: #ffffff;
+  padding: 0.6rem;
+  border-radius: 4px;
+}
+
+.calibration-form button {
+  background: #8b5cf6;
+  color: #ffffff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calibration-form .cancel-btn {
+  background: #282828;
+}
+
+.calibration-note {
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+.confidence {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  margin-left: 0.5rem;
+  font-weight: normal;
 }
 
 /* ========================================
@@ -923,5 +1048,14 @@ body {
 
   .player-right {
     display: none;
+  }
+
+  .cluster-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .cluster-emoji {
+    font-size: 2.5rem;
   }
 }

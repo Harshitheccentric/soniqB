@@ -1,9 +1,10 @@
 /**
  * PlayerView Component
  * Main music player interface with audio controls and event logging
+ * Includes ML calibration (Phase 3) to "teach" the model genres
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { getTracks, getAudioUrl, logEvent } from '../api/musicApi';
+import { getTracks, getAudioUrl, logEvent, calibrateTrack } from '../api/musicApi';
 
 function PlayerView({ user }) {
     const [tracks, setTracks] = useState([]);
@@ -13,6 +14,11 @@ function PlayerView({ user }) {
     const [duration, setDuration] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    // ML Calibration states
+    const [showCalibration, setShowCalibration] = useState(false);
+    const [calibrationGenre, setCalibrationGenre] = useState('');
+    const [calibrating, setCalibrating] = useState(false);
 
     const audioRef = useRef(null);
 
@@ -115,6 +121,7 @@ function PlayerView({ user }) {
         setCurrentTrackIndex(nextIndex);
         setIsPlaying(false);
         setIsLiked(false);
+        setShowCalibration(false);
     };
 
     const handleLike = () => {
@@ -149,6 +156,27 @@ function PlayerView({ user }) {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // ML Calibration handler
+    const handleCalibrate = async () => {
+        if (!calibrationGenre.trim()) return;
+
+        try {
+            setCalibrating(true);
+            await calibrateTrack(currentTrack.id, calibrationGenre);
+
+            // Refresh tracks to show new genre
+            await loadTracks();
+            setShowCalibration(false);
+            setCalibrationGenre('');
+            alert(`Thanks! MusicFM has learned that this track is '${calibrationGenre}'.`);
+        } catch (err) {
+            console.error('Calibration failed:', err);
+            alert('Calibration failed. Check console for details.');
+        } finally {
+            setCalibrating(false);
+        }
+    };
+
     if (loading) {
         return <div className="player-view loading">Loading tracks...</div>;
     }
@@ -156,6 +184,8 @@ function PlayerView({ user }) {
     if (!currentTrack) {
         return <div className="player-view">No tracks available</div>;
     }
+
+    const hasPredictedGenre = currentTrack.predicted_genre && currentTrack.predicted_genre !== 'Unknown';
 
     return (
         <div className="player-view">
@@ -171,9 +201,17 @@ function PlayerView({ user }) {
                     />
                     <h3 className="track-title">{currentTrack.title}</h3>
                     <p className="track-artist">{currentTrack.artist}</p>
-                    <p className="track-genre">
-                        Genre: {currentTrack.predicted_genre || 'Not predicted yet'}
-                    </p>
+
+                    {hasPredictedGenre ? (
+                        <div className="genre-badge">
+                            Genre: {currentTrack.predicted_genre}
+                            <span className="confidence">({Math.round((currentTrack.genre_confidence || 0) * 100)}%)</span>
+                        </div>
+                    ) : (
+                        <div className="genre-badge unknown">
+                            Genre: Not predicted yet
+                        </div>
+                    )}
                 </div>
 
                 {/* Audio Element */}
@@ -230,14 +268,54 @@ function PlayerView({ user }) {
                     Track {currentTrackIndex + 1} of {tracks.length}
                 </p>
 
+                {/* ML Calibration UI */}
+                <div className="calibration-section">
+                    {!showCalibration ? (
+                        <button
+                            className="calibrate-trigger"
+                            onClick={() => setShowCalibration(true)}
+                        >
+                            🎓 Teach the Model (Calibrate)
+                        </button>
+                    ) : (
+                        <div className="calibration-form">
+                            <h4>What genre is this?</h4>
+                            <div className="form-row">
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Rock, Techno, Jazz"
+                                    value={calibrationGenre}
+                                    onChange={(e) => setCalibrationGenre(e.target.value)}
+                                    disabled={calibrating}
+                                />
+                                <button
+                                    onClick={handleCalibrate}
+                                    disabled={calibrating || !calibrationGenre.trim()}
+                                >
+                                    {calibrating ? 'Learning...' : 'Submit'}
+                                </button>
+                                <button
+                                    className="cancel-btn"
+                                    onClick={() => setShowCalibration(false)}
+                                    disabled={calibrating}
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <p className="calibration-note">
+                                This will extract the MusicFM embedding and use it as a reference for all future classification.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
                 {/* Educational Notice */}
-                <div className="info-box">
+                <div className="info-box ml-info">
                     <p>
-                        <strong>Event Logging:</strong> All listening activity is recorded
-                        for future ML training.
+                        <strong>🤖 Phase 3: MusicFM Lab</strong>
                     </p>
-                    <p className="events-logged">
-                        Events: Play • Pause • Skip • Like
+                    <p>
+                        Since MusicFM is a foundation model, it needs "anchor" examples to connect its audio analysis to human labels.
                     </p>
                 </div>
             </div>
