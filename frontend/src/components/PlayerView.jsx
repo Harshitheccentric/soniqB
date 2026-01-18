@@ -4,9 +4,9 @@
  * Includes ML calibration (Phase 3) to "teach" the model genres
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { getTracks, getAudioUrl, logEvent, calibrateTrack } from '../api/musicApi';
+import { getTracks, getAudioUrl, logEvent, calibrateTrack, getLikedTrackIds, getPlaylists, removeTrackFromPlaylist } from '../api/musicApi';
 
-function PlayerView({ user }) {
+function PlayerView({ user, selectedTrack }) {
     const [tracks, setTracks] = useState([]);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -14,6 +14,8 @@ function PlayerView({ user }) {
     const [duration, setDuration] = useState(0);
     const [isLiked, setIsLiked] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [likedTrackIds, setLikedTrackIds] = useState(new Set());
+    const [likedPlaylistId, setLikedPlaylistId] = useState(null);
 
     // ML Calibration states
     const [showCalibration, setShowCalibration] = useState(false);
@@ -24,7 +26,52 @@ function PlayerView({ user }) {
 
     useEffect(() => {
         loadTracks();
+        loadLikedTracks();
     }, []);
+
+    // Load liked tracks to check like status
+    const loadLikedTracks = async () => {
+        try {
+            const trackIds = await getLikedTrackIds();
+            setLikedTrackIds(new Set(trackIds));
+            
+            // Also get the liked playlist ID for unlike functionality
+            const playlists = await getPlaylists(user.id);
+            const likedPlaylist = playlists.find(p => p.type === 'liked_songs');
+            if (likedPlaylist) {
+                setLikedPlaylistId(likedPlaylist.id);
+            }
+        } catch (err) {
+            console.error('Error loading liked tracks:', err);
+        }
+    };
+
+    // Check if current track is liked whenever track changes
+    useEffect(() => {
+        if (currentTrack) {
+            setIsLiked(likedTrackIds.has(currentTrack.id));
+        }
+    }, [currentTrackIndex, likedTrackIds, tracks]);
+
+    // Handle track selection from playlists
+    useEffect(() => {
+        if (selectedTrack && tracks.length > 0) {
+            const trackIndex = tracks.findIndex(t => t.id === selectedTrack.id);
+            if (trackIndex !== -1) {
+                setCurrentTrackIndex(trackIndex);
+                setIsPlaying(false);
+                setShowCalibration(false);
+                // Auto-play the selected track
+                setTimeout(() => {
+                    if (audioRef.current) {
+                        audioRef.current.play();
+                        setIsPlaying(true);
+                        logPlayEvent();
+                    }
+                }, 100);
+            }
+        }
+    }, [selectedTrack, tracks]);
 
     const loadTracks = async () => {
         try {
@@ -120,13 +167,34 @@ function PlayerView({ user }) {
         const nextIndex = (currentTrackIndex + 1) % tracks.length;
         setCurrentTrackIndex(nextIndex);
         setIsPlaying(false);
-        setIsLiked(false);
         setShowCalibration(false);
     };
 
-    const handleLike = () => {
-        setIsLiked(!isLiked);
-        logLikeEvent();
+    const handleLike = async () => {
+        const newLikedState = !isLiked;
+        setIsLiked(newLikedState);
+        
+        if (newLikedState) {
+            // Like: Add to liked tracks set and log event
+            setLikedTrackIds(prev => new Set([...prev, currentTrack.id]));
+            await logLikeEvent();
+        } else {
+            // Unlike: Remove from liked tracks set and playlist
+            setLikedTrackIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(currentTrack.id);
+                return newSet;
+            });
+            
+            if (likedPlaylistId) {
+                try {
+                    await removeTrackFromPlaylist(likedPlaylistId, currentTrack.id);
+                    console.log('✓ Track removed from Liked Songs');
+                } catch (err) {
+                    console.error('Error removing track from playlist:', err);
+                }
+            }
+        }
     };
 
     const handleTimeUpdate = () => {

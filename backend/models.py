@@ -10,7 +10,8 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, nullable=False)
+    username = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
@@ -56,7 +57,8 @@ class Playlist(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    type = Column(String, nullable=False)  # manual or auto
+    name = Column(String, nullable=False)
+    type = Column(String, nullable=False)  # manual, auto, or liked_songs
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships

@@ -75,6 +75,7 @@ class PlaylistTrackItem(BaseModel):
 class PlaylistCreate(BaseModel):
     """Schema for creating a manual playlist."""
     user_id: int
+    name: str
     tracks: List[PlaylistTrackItem] = []
 
 
@@ -82,6 +83,7 @@ class PlaylistResponse(BaseModel):
     """Schema for playlist response."""
     id: int
     user_id: int
+    name: str
     type: str
     created_at: datetime
     

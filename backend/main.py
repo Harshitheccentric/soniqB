@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.db import init_db
-from backend.routes import users, tracks, events, playlists, ml
+from backend.routes import users, tracks, events, playlists, ml, auth
 
 # Create FastAPI app
 app = FastAPI(
@@ -28,6 +28,7 @@ def startup_event():
 
 
 # Register routers
+app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(tracks.router)
 app.include_router(events.router)

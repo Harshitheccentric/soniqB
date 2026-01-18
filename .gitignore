@@ -33,6 +33,16 @@ logs/
 .env
 .env.local
 
+# Node.js / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm
+.yarn
+package-lock.json
+yarn.lock
+
 # Audio files (optional - uncomment if you don't want to commit audio)
 # backend/storage/audio/*.mp3
 # backend/storage/audio/*.wav
@@ -50,6 +60,5 @@ Thumbs.db
 backend/fma/fma_metadata/
 backend/fma/fma_small/
 
-# ML Model Weights
-
-backend/ml/data/*.json
+# ML Model data and weights (large binary files)
+backend/ml/data/

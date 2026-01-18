@@ -2,29 +2,80 @@
  * Main App Component
  * Manages application state and navigation between views
  */
-import React, { useState } from 'react';
-import UserSelector from './components/UserSelector';
+import React, { useState, useEffect } from 'react';
+import Login from './components/Login';
+import Register from './components/Register';
 import PlayerView from './components/PlayerView';
 import PlaylistView from './components/PlaylistView';
 import ListeningSummary from './components/ListeningSummary';
+import { getCurrentUser, isAuthenticated, logout as apiLogout } from './api/musicApi';
 import './App.css';
 
 function App() {
     const [currentUser, setCurrentUser] = useState(null);
     const [currentView, setCurrentView] = useState('player');
+    const [authView, setAuthView] = useState('login'); // 'login' or 'register'
+    const [loading, setLoading] = useState(true);
+    const [selectedTrack, setSelectedTrack] = useState(null);
 
-    const handleUserSelect = (user) => {
+    // Check for existing authentication on mount
+    useEffect(() => {
+        if (isAuthenticated()) {
+            const user = getCurrentUser();
+            if (user) {
+                setCurrentUser(user);
+            }
+        }
+        setLoading(false);
+    }, []);
+
+    const handleLoginSuccess = (user) => {
+        setCurrentUser(user);
+    };
+
+    const handleRegisterSuccess = (user) => {
         setCurrentUser(user);
     };
 
     const handleLogout = () => {
+        apiLogout();
         setCurrentUser(null);
         setCurrentView('player');
+        setSelectedTrack(null);
     };
 
-    // User selection screen
+    const handleTrackSelect = (track) => {
+        setSelectedTrack(track);
+        setCurrentView('player'); // Switch to player view automatically
+    };
+
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="app-loading">
+                <h1>🎵 SoniqB</h1>
+                <p>Loading...</p>
+            </div>
+        );
+    }
+
+    // Show auth screens if not logged in
     if (!currentUser) {
-        return <UserSelector onUserSelect={handleUserSelect} />;
+        if (authView === 'login') {
+            return (
+                <Login
+                    onLoginSuccess={handleLoginSuccess}
+                    onSwitchToRegister={() => setAuthView('register')}
+                />
+            );
+        } else {
+            return (
+                <Register
+                    onRegisterSuccess={handleRegisterSuccess}
+                    onSwitchToLogin={() => setAuthView('login')}
+                />
+            );
+        }
     }
 
     // Main application
@@ -69,8 +120,8 @@ function App() {
                         Logout
                     </button>
                     <div className="ml-notice">
-                        <p>Phase 2: Educational AIML Lab Project</p>
-                        <p>⚠️ No ML logic in frontend</p>
+                        <p>Phase 3: ML-Powered Music Player</p>
+                        <p>✅ Authentication Enabled</p>
                     </div>
                 </div>
             </aside>
@@ -78,8 +129,8 @@ function App() {
             {/* Main Content Area */}
             <main className="main-content">
                 <div className="content-wrapper">
-                    {currentView === 'player' && <PlayerView user={currentUser} />}
-                    {currentView === 'playlists' && <PlaylistView user={currentUser} />}
+                    {currentView === 'player' && <PlayerView user={currentUser} selectedTrack={selectedTrack} />}
+                    {currentView === 'playlists' && <PlaylistView user={currentUser} onTrackSelect={handleTrackSelect} />}
                     {currentView === 'summary' && <ListeningSummary user={currentUser} />}
                 </div>
             </main>

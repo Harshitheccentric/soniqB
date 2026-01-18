@@ -3,27 +3,24 @@
  * Displays user playlists with track information
  */
 import React, { useState, useEffect } from 'react';
-import { getPlaylists, getTracks } from '../api/musicApi';
+import { getPlaylists, getPlaylistDetails } from '../api/musicApi';
 
-function PlaylistView({ user }) {
+function PlaylistView({ user, onTrackSelect }) {
     const [playlists, setPlaylists] = useState([]);
-    const [tracks, setTracks] = useState([]);
+    const [expandedPlaylist, setExpandedPlaylist] = useState(null);
+    const [playlistTracks, setPlaylistTracks] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        loadData();
+        loadPlaylists();
     }, [user.id]);
 
-    const loadData = async () => {
+    const loadPlaylists = async () => {
         try {
             setLoading(true);
-            const [playlistsData, tracksData] = await Promise.all([
-                getPlaylists(user.id),
-                getTracks()
-            ]);
+            const playlistsData = await getPlaylists(user.id);
             setPlaylists(playlistsData);
-            setTracks(tracksData);
             setError(null);
         } catch (err) {
             setError('Failed to load playlists');
@@ -33,8 +30,30 @@ function PlaylistView({ user }) {
         }
     };
 
-    const getTrackById = (trackId) => {
-        return tracks.find(t => t.id === trackId);
+    const togglePlaylist = async (playlistId) => {
+        if (expandedPlaylist === playlistId) {
+            setExpandedPlaylist(null);
+        } else {
+            setExpandedPlaylist(playlistId);
+            // Load tracks if not already loaded
+            if (!playlistTracks[playlistId]) {
+                try {
+                    const details = await getPlaylistDetails(playlistId);
+                    setPlaylistTracks(prev => ({
+                        ...prev,
+                        [playlistId]: details.tracks
+                    }));
+                } catch (err) {
+                    console.error('Error loading playlist tracks:', err);
+                }
+            }
+        }
+    };
+
+    const handleTrackClick = (track) => {
+        if (onTrackSelect) {
+            onTrackSelect(track);
+        }
     };
 
     if (loading) {
@@ -53,43 +72,66 @@ function PlaylistView({ user }) {
             {playlists.length === 0 ? (
                 <div className="no-playlists">
                     <p>You don't have any playlists yet.</p>
-                    <p className="hint">Create playlists using the backend API.</p>
+                    <p className="hint">Like some tracks to populate your "Liked Songs" playlist!</p>
                 </div>
             ) : (
                 <div className="playlists-container">
                     {playlists.map(playlist => (
                         <div key={playlist.id} className="playlist-card">
-                            <div className="playlist-header">
-                                <h3>Playlist #{playlist.id}</h3>
+                            <div 
+                                className="playlist-header clickable" 
+                                onClick={() => togglePlaylist(playlist.id)}
+                            >
+                                <div className="playlist-title-area">
+                                    <span className="expand-icon">
+                                        {expandedPlaylist === playlist.id ? '▼' : '▶'}
+                                    </span>
+                                    <h3>{playlist.name}</h3>
+                                </div>
                                 <span className={`playlist-type ${playlist.type}`}>
-                                    {playlist.type}
+                                    {playlist.type === 'liked_songs' ? '💖 Liked' : '📋 Manual'}
                                 </span>
                             </div>
                             <p className="playlist-date">
                                 Created: {new Date(playlist.created_at).toLocaleDateString()}
                             </p>
 
-                            {/* Note: Track details would require additional API endpoint 
-                  to get playlist tracks with positions */}
-                            <p className="playlist-note">
-                                View track details via backend API
-                            </p>
+                            {/* Expanded track list */}
+                            {expandedPlaylist === playlist.id && (
+                                <div className="playlist-tracks">
+                                    {!playlistTracks[playlist.id] ? (
+                                        <p className="loading-tracks">Loading tracks...</p>
+                                    ) : playlistTracks[playlist.id].length === 0 ? (
+                                        <p className="no-tracks">No tracks in this playlist yet.</p>
+                                    ) : (
+                                        <div className="track-list">
+                                            {playlistTracks[playlist.id].map((item, index) => (
+                                                <div 
+                                                    key={index} 
+                                                    className="track-item"
+                                                    onClick={() => handleTrackClick(item.track)}
+                                                >
+                                                    <span className="track-number">{index + 1}</span>
+                                                    <div className="track-details">
+                                                        <div className="track-title">{item.track.title}</div>
+                                                        <div className="track-artist">{item.track.artist}</div>
+                                                    </div>
+                                                    <div className="track-genre">
+                                                        {item.track.predicted_genre || '-'}
+                                                    </div>
+                                                    <button className="play-button" title="Play">
+                                                        ▶️
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
             )}
-
-            {/* Auto-playlist placeholder */}
-            <div className="auto-playlist-section">
-                <h3>🤖 Auto-Generated Playlists</h3>
-                <div className="info-box">
-                    <p>
-                        <strong>Coming in Future Phases:</strong> ML-based auto-playlists
-                        will be generated using your listening patterns.
-                    </p>
-                    <p>Currently, only manual playlists are supported.</p>
-                </div>
-            </div>
         </div>
     );
 }

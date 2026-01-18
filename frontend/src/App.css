@@ -22,6 +22,26 @@ body {
   overflow: hidden;
 }
 
+/* Loading State */
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.app-loading h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+}
+
+.app-loading p {
+  font-size: 1.2em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* App Layout - Three Part Structure */
 .app {
   display: grid;
@@ -622,13 +642,11 @@ body {
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
-  cursor: pointer;
   border: 1px solid transparent;
 }
 
 .playlist-card:hover {
   background: #282828;
-  transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   border-color: #1DB954;
 }
@@ -638,6 +656,23 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+.playlist-header.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.playlist-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.expand-icon {
+  color: #1DB954;
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
 }
 
 .playlist-header h3 {
@@ -658,6 +693,11 @@ body {
 .playlist-type.manual {
   background: #1DB954;
   color: #000000;
+}
+
+.playlist-type.liked_songs {
+  background: #e91e63;
+  color: #ffffff;
 }
 
 .playlist-type.auto {
@@ -695,6 +735,104 @@ body {
   color: #6a6a6a;
   font-size: 0.85rem;
   margin-top: 0.5rem;
+}
+
+/* Playlist Tracks Expandable Section */
+.playlist-tracks {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #282828;
+}
+
+.loading-tracks,
+.no-tracks {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.track-item {
+  display: grid;
+  grid-template-columns: 30px 1fr 100px 40px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  background: #121212;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.track-item:hover {
+  background: #282828;
+  transform: translateX(4px);
+}
+
+.track-item:hover .play-button {
+  opacity: 1;
+}
+
+.track-number {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.track-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow: hidden;
+}
+
+.track-title {
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-artist {
+  color: #b3b3b3;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-genre {
+  color: #8b5cf6;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.play-button {
+  background: #1DB954;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+}
+
+.play-button:hover {
+  transform: scale(1.1);
+  background: #1ed760;
 }
 
 .auto-playlist-section {

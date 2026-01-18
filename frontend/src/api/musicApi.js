@@ -13,6 +13,67 @@ const api = axios.create({
     },
 });
 
+// Add JWT token to requests if available
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Handle 401 responses (expired/invalid token)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Clear invalid token and redirect to login
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('current_user');
+            window.location.href = '/';
+        }
+        return Promise.reject(error);
+    }
+);
+
+// Auth API calls
+export const register = async (username, password) => {
+    const response = await api.post('/auth/register', { username, password });
+    if (response.data.access_token) {
+        localStorage.setItem('auth_token', response.data.access_token);
+        localStorage.setItem('current_user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+};
+
+export const login = async (username, password) => {
+    const response = await api.post('/auth/login', { username, password });
+    if (response.data.access_token) {
+        localStorage.setItem('auth_token', response.data.access_token);
+        localStorage.setItem('current_user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+};
+
+export const logout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('current_user');
+};
+
+export const getCurrentUser = () => {
+    const userJson = localStorage.getItem('current_user');
+    return userJson ? JSON.parse(userJson) : null;
+};
+
+export const isAuthenticated = () => {
+    return !!localStorage.getItem('auth_token');
+};
+
 // User API calls
 export const getUsers = async () => {
     const response = await api.get('/users');
@@ -57,8 +118,29 @@ export const getPlaylists = async (userId) => {
     return response.data;
 };
 
+export const getPlaylistDetails = async (playlistId) => {
+    const response = await api.get(`/playlists/detail/${playlistId}`);
+    return response.data;
+};
+
+export const getLikedTrackIds = async () => {
+    const response = await api.get('/playlists/liked_songs/track_ids');
+    return response.data;
+};
+
+export const removeTrackFromPlaylist = async (playlistId, trackId) => {
+    const response = await api.delete(`/playlists/${playlistId}/tracks/${trackId}`);
+    return response.data;
+};
+
 export const createPlaylist = async (playlistData) => {
     const response = await api.post('/playlists/manual', playlistData);
+    return response.data;
+};
+
+// Track scanning
+export const scanTracks = async () => {
+    const response = await api.post('/tracks/scan');
     return response.data;
 };
 
