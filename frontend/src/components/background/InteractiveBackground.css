@@ -1,0 +1,118 @@
+/**
+ * InteractiveBackground Styles
+ * Cursor-following effects with gradient spotlight - Dark Mode Ready
+ */
+
+.interactive-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    background: var(--bg-page);
+    transition: background 0.3s ease;
+}
+
+/* Cursor Spotlight */
+.interactive-bg__spotlight {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            var(--glow-primary) 0%,
+            var(--glow-secondary) 30%,
+            rgba(172, 206, 183, 0.08) 50%,
+            transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+    filter: blur(20px);
+}
+
+.interactive-bg__spotlight--active {
+    opacity: 1;
+}
+
+/* Particle Trail */
+.interactive-bg__particle {
+    position: fixed;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+    pointer-events: none;
+    box-shadow:
+        0 0 20px rgba(141, 90, 151, 0.6),
+        0 0 40px rgba(141, 90, 151, 0.3);
+}
+
+/* Grid Pattern */
+.interactive-bg__grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        linear-gradient(var(--border-light) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+}
+
+/* Ambient Orbs */
+.interactive-bg__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.interactive-bg__orb--1 {
+    width: 400px;
+    height: 400px;
+    background: linear-gradient(135deg, rgba(141, 90, 151, 0.4) 0%, rgba(181, 131, 141, 0.3) 100%);
+    top: -100px;
+    right: -100px;
+    animation: pulse-slow 8s ease-in-out infinite;
+}
+
+.interactive-bg__orb--2 {
+    width: 350px;
+    height: 350px;
+    background: linear-gradient(135deg, rgba(172, 206, 183, 0.4) 0%, rgba(164, 165, 174, 0.3) 100%);
+    bottom: -100px;
+    left: -100px;
+    animation: pulse-slow 10s ease-in-out infinite reverse;
+}
+
+@keyframes pulse-slow {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.15);
+    }
+}
+
+/* Dark mode - brighter glows */
+[data-theme="dark"] .interactive-bg__orb {
+    opacity: 0.5;
+}
+
+[data-theme="dark"] .interactive-bg__particle {
+    box-shadow:
+        0 0 30px rgba(141, 90, 151, 0.8),
+        0 0 60px rgba(141, 90, 151, 0.5);
+}

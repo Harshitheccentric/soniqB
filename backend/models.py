@@ -11,7 +11,7 @@ class User(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False, index=True)
-    password_hash = Column(String, nullable=False)
+    password_hash = Column(String, nullable=True)  # Nullable for identity-anchoring
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships

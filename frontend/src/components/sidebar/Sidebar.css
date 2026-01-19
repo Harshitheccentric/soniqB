@@ -1,0 +1,191 @@
+/**
+ * Sidebar Styles - Premium Edition
+ * Elegant navigation with refined micro-interactions
+ */
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 260px;
+    min-width: 260px;
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(32px);
+    border-right: 1px solid var(--border-light);
+    padding: 0;
+    box-shadow:
+        4px 0 32px rgba(0, 0, 0, 0.03),
+        1px 0 0 rgba(255, 255, 255, 0.1) inset;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* Brand Section */
+.sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-xl) var(--space-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.sidebar__brand-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+    border-radius: 12px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(141, 90, 151, 0.25);
+}
+
+.sidebar__brand-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+}
+
+/* Navigation */
+.sidebar__nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-lg);
+    gap: var(--space-xs);
+}
+
+.sidebar__nav-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--ash-grey);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-sm);
+    padding: 0 var(--space-md);
+}
+
+.sidebar__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    width: 100%;
+    padding: 14px var(--space-lg);
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: var(--font-family-sans);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ash-grey);
+    text-align: left;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.sidebar__item:hover {
+    background: rgba(141, 90, 151, 0.08);
+    color: var(--vintage-lavender);
+    box-shadow: 0 0 20px rgba(141, 90, 151, 0.2), 0 0 40px rgba(141, 90, 151, 0.1);
+}
+
+.sidebar__item--active {
+    background: linear-gradient(135deg,
+            rgba(141, 90, 151, 0.1) 0%,
+            rgba(181, 131, 141, 0.06) 100%);
+    color: var(--vintage-lavender);
+    font-weight: 600;
+}
+
+.sidebar__icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(141, 90, 151, 0.06);
+    border-radius: 10px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar__item:hover .sidebar__icon {
+    background: rgba(141, 90, 151, 0.12);
+}
+
+.sidebar__item--active .sidebar__icon {
+    background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+    color: white;
+    box-shadow: 0 4px 16px rgba(141, 90, 151, 0.3);
+}
+
+.sidebar__label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.01em;
+}
+
+.sidebar__active-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--celadon);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+}
+
+/* Footer */
+.sidebar__footer {
+    padding: var(--space-lg);
+    border-top: 1px solid rgba(141, 90, 151, 0.06);
+}
+
+.sidebar__version {
+    font-size: 0.75rem;
+    color: var(--ash-grey);
+    opacity: 0.5;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 80px;
+        min-width: 80px;
+    }
+
+    .sidebar__brand-text,
+    .sidebar__nav-label,
+    .sidebar__label,
+    .sidebar__active-dot {
+        display: none;
+    }
+
+    .sidebar__brand {
+        justify-content: center;
+        padding: var(--space-lg);
+    }
+
+    .sidebar__item {
+        justify-content: center;
+        padding: var(--space-md);
+    }
+}

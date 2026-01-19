@@ -1,0 +1,49 @@
+/**
+ * Surface Component Styles
+ */
+
+.surface {
+  background: white;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+}
+
+/* Variants */
+.surface--flat {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--pale-slate);
+}
+
+.surface--raised {
+  background: white;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(164, 165, 174, 0.1);
+}
+
+.surface--outlined {
+  background: transparent;
+  border: 2px solid var(--pale-slate);
+}
+
+/* Padding Variants */
+.surface--padding-none {
+  padding: 0;
+}
+
+.surface--padding-sm {
+  padding: var(--space-sm);
+}
+
+.surface--padding-md {
+  padding: var(--space-md);
+}
+
+.surface--padding-lg {
+  padding: var(--space-lg);
+}
+
+/* Hover effect for raised surfaces */
+.surface--raised:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}

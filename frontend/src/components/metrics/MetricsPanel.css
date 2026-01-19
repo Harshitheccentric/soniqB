@@ -1,0 +1,132 @@
+/**
+ * MetricsPanel Styles - Production Grade
+ * Premium analytics dashboard cards
+ */
+
+.metrics-panel {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.metrics-panel__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-xl) 0;
+  letter-spacing: -0.02em;
+}
+
+.metrics-panel__loading {
+  text-align: center;
+  color: var(--ash-grey);
+  padding: var(--space-2xl);
+  font-size: 0.9375rem;
+}
+
+.metrics-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 246, 250, 0.9) 100%);
+  border: 1px solid rgba(164, 165, 174, 0.15);
+  border-radius: 16px;
+  text-align: center;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    0 1px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 50%, var(--celadon) 100%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.metric-card:hover::before {
+  opacity: 1;
+}
+
+.metric-card__value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.metric-card__label {
+  font-size: 0.6875rem;
+  color: var(--ash-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.metrics-panel__chart {
+  flex: 1;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid rgba(164, 165, 174, 0.15);
+}
+
+.metrics-panel__chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-lg) 0;
+  letter-spacing: -0.01em;
+}
+
+/* Empty state */
+.metrics-panel__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--ash-grey);
+}
+
+.metrics-panel__empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-lg);
+  opacity: 0.4;
+}
+
+.metrics-panel__empty-text {
+  font-size: 0.9375rem;
+  max-width: 240px;
+  line-height: 1.5;
+}

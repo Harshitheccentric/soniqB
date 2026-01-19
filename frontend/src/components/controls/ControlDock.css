@@ -1,0 +1,308 @@
+/**
+ * ControlDock Styles - Premium Edition
+ * Ultra-polished floating player
+ */
+
+.control-dock {
+  position: fixed;
+  bottom: var(--space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 320px);
+  max-width: 800px;
+  background: var(--bg-control-dock);
+  backdrop-filter: blur(32px);
+  border-radius: 24px;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    0 0 0 1px var(--border-light),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: 0;
+  z-index: var(--z-fixed);
+  overflow: hidden;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.control-dock:hover {
+  transform: translateX(-50%) translateY(-4px);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.12),
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    0 0 0 1px var(--border-medium),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 50px var(--glow-primary),
+    0 0 100px var(--glow-secondary);
+}
+
+/* Progress Bar at Top */
+.control-dock__progress {
+  padding: 0 var(--space-xl);
+  padding-top: var(--space-lg);
+}
+
+.control-dock__progress-track {
+  position: relative;
+  height: 4px;
+  background: rgba(164, 165, 174, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.control-dock__progress-track:hover {
+  height: 6px;
+}
+
+.control-dock__progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+      var(--vintage-lavender) 0%,
+      var(--dusty-mauve) 50%,
+      var(--celadon) 100%);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.control-dock__progress-input {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.control-dock__progress-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 3px solid var(--vintage-lavender);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.control-dock__progress-track:hover .control-dock__progress-input::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+/* Main Content */
+.control-dock__main {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-lg) var(--space-xl);
+}
+
+/* Track Info */
+.control-dock__track {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.control-dock__artwork {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(141, 90, 151, 0.2);
+}
+
+.control-dock__artwork-icon {
+  font-size: 1.25rem;
+  color: white;
+}
+
+.control-dock__artwork-empty {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.control-dock__info {
+  min-width: 0;
+}
+
+.control-dock__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.control-dock__artist {
+  font-size: 0.8125rem;
+  color: var(--ash-grey);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.control-dock__empty {
+  font-size: 0.875rem;
+  color: var(--ash-grey);
+}
+
+/* Controls */
+.control-dock__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.control-dock__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.control-dock__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.control-dock__btn--primary {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
+  color: white;
+  border-radius: 50%;
+  box-shadow: 0 6px 20px rgba(141, 90, 151, 0.35);
+}
+
+.control-dock__btn--primary:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 8px 28px rgba(141, 90, 151, 0.45);
+}
+
+.control-dock__btn--primary:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.control-dock__btn--secondary {
+  width: 44px;
+  height: 44px;
+  background: rgba(141, 90, 151, 0.08);
+  color: var(--vintage-lavender);
+  border-radius: 50%;
+  flex-direction: column;
+  gap: 0;
+}
+
+.control-dock__btn--secondary:hover:not(:disabled) {
+  background: rgba(141, 90, 151, 0.15);
+  transform: scale(1.05);
+}
+
+.control-dock__btn-label {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  margin-top: -2px;
+}
+
+.control-dock__btn--ghost {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  color: var(--ash-grey);
+  border-radius: 50%;
+}
+
+.control-dock__btn--ghost:hover:not(:disabled) {
+  background: rgba(141, 90, 151, 0.08);
+  color: var(--vintage-lavender);
+}
+
+/* Right Section */
+.control-dock__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-lg);
+}
+
+.control-dock__time {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ash-grey);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  gap: 4px;
+}
+
+.control-dock__time-separator {
+  opacity: 0.5;
+}
+
+.control-dock__volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--ash-grey);
+}
+
+.control-dock__volume-slider {
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(164, 165, 174, 0.3);
+  border-radius: 2px;
+  outline: none;
+}
+
+.control-dock__volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--vintage-lavender);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(141, 90, 151, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .control-dock {
+    width: calc(100% - 120px);
+  }
+}
+
+@media (max-width: 768px) {
+  .control-dock {
+    width: calc(100% - 32px);
+    border-radius: 20px;
+  }
+
+  .control-dock__main {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .control-dock__track,
+  .control-dock__right {
+    justify-content: center;
+  }
+}

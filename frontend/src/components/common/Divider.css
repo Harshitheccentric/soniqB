@@ -1,0 +1,44 @@
+/**
+ * Divider Component Styles
+ */
+
+.divider {
+  background: var(--pale-slate);
+  border: none;
+}
+
+/* Orientation */
+.divider--horizontal {
+  width: 100%;
+  height: 1px;
+}
+
+.divider--vertical {
+  width: 1px;
+  height: 100%;
+}
+
+/* Spacing */
+.divider--spacing-sm.divider--horizontal {
+  margin: var(--space-sm) 0;
+}
+
+.divider--spacing-sm.divider--vertical {
+  margin: 0 var(--space-sm);
+}
+
+.divider--spacing-md.divider--horizontal {
+  margin: var(--space-md) 0;
+}
+
+.divider--spacing-md.divider--vertical {
+  margin: 0 var(--space-md);
+}
+
+.divider--spacing-lg.divider--horizontal {
+  margin: var(--space-lg) 0;
+}
+
+.divider--spacing-lg.divider--vertical {
+  margin: 0 var(--space-lg);
+}
