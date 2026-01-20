@@ -1,9 +1,10 @@
 /**
  * ControlDock Component - Premium Edition
- * Floating control bar with proper SVG icons
+ * Floating control bar with dynamic positioning based on sidebar
  */
 
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
+import { useSidebar } from '../../context/SidebarContext';
 import './ControlDock.css';
 
 // Premium SVG Icons
@@ -51,6 +52,7 @@ const VolumeIcon = () => (
 
 export default function ControlDock() {
   const { currentTrack, isPlaying, currentTime, duration, play, pause, skip, seekTo, volume, setVolume } = useAudioPlayer();
+  const { isOpen: sidebarOpen } = useSidebar();
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00';
@@ -72,7 +74,7 @@ export default function ControlDock() {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="control-dock">
+    <div className={`control-dock ${sidebarOpen ? 'control-dock--sidebar-open' : 'control-dock--sidebar-closed'}`}>
       {/* Progress Bar - Now at top for better UX */}
       <div className="control-dock__progress">
         <div className="control-dock__progress-track">

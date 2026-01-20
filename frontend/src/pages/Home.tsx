@@ -1,17 +1,18 @@
 /**
  * Home Page - Premium Edition
- * Main observatory interface with interactive cursor background
+ * Main observatory interface with collapsible sidebar
  */
 
 import { useState } from 'react';
 import { useSession } from '../hooks/useSession';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useSidebar } from '../context/SidebarContext';
 import SessionHeader from '../components/header/SessionHeader';
 import Sidebar, { type ViewType } from '../components/sidebar/Sidebar';
 import InteractiveBackground from '../components/background/InteractiveBackground';
 import ActiveTrackPanel from '../components/track/ActiveTrackPanel';
 import MetricsPanel from '../components/metrics/MetricsPanel';
-import PlaylistStrip from '../components/playlists/PlaylistStrip';
+import TrackLibrary from '../components/library/TrackLibrary';
 import ControlDock from '../components/controls/ControlDock';
 import type { Track } from '../types';
 import './Home.css';
@@ -19,18 +20,19 @@ import './Home.css';
 export default function Home() {
   const { session, clearSession } = useSession();
   const { setQueue, play, currentTrack } = useAudioPlayer();
+  const { isOpen: sidebarOpen } = useSidebar();
   const [activeView, setActiveView] = useState<ViewType>('nowPlaying');
 
   const handleLogout = () => {
     clearSession();
-    window.location.href = '/login';
+    window.location.href = '/signin';
   };
 
-  const handleTrackSelect = (trackId: number, playlistTracks: Track[]) => {
-    const trackIndex = playlistTracks.findIndex((t) => t.id === trackId);
+  const handleTrackSelect = (track: Track, allTracks: Track[]) => {
+    const trackIndex = allTracks.findIndex((t) => t.id === track.id);
     if (trackIndex !== -1) {
-      setQueue(playlistTracks, trackIndex);
-      play(playlistTracks[trackIndex]);
+      setQueue(allTracks, trackIndex);
+      play(allTracks[trackIndex]);
       setActiveView('nowPlaying');
     }
   };
@@ -46,14 +48,14 @@ export default function Home() {
       case 'metrics':
         return <MetricsPanel userId={session.user!.id} />;
       case 'playlists':
-        return <PlaylistStrip userId={session.user!.id} onTrackSelect={handleTrackSelect} />;
+        return <TrackLibrary onTrackSelect={handleTrackSelect} />;
       default:
         return <ActiveTrackPanel track={currentTrack} />;
     }
   };
 
   return (
-    <div className="home-page">
+    <div className={`home-page ${sidebarOpen ? 'home-page--sidebar-open' : 'home-page--sidebar-closed'}`}>
       {/* Interactive Cursor-Following Background */}
       <InteractiveBackground />
 

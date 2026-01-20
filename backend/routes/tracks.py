@@ -1,7 +1,7 @@
-"""Track and audio streaming routes."""
+"""Track and audio streaming routes with Range request support for seeking."""
 import os
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse, StreamingResponse, Response
 from sqlalchemy.orm import Session
 from typing import List
 from backend.db import get_db
@@ -28,10 +28,10 @@ def get_track(track_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/audio/{track_id}")
-def stream_audio(track_id: int, db: Session = Depends(get_db)):
+def stream_audio(track_id: int, request: Request, db: Session = Depends(get_db)):
     """
-    Stream audio file for a track.
-    Database stores only file paths, not audio content.
+    Stream audio file with Range request support for seeking.
+    This enables the browser to seek within the audio file.
     """
     track = db.query(Track).filter(Track.id == track_id).first()
     if not track:
@@ -41,8 +41,12 @@ def stream_audio(track_id: int, db: Session = Depends(get_db)):
     if not os.path.exists(track.audio_path):
         raise HTTPException(status_code=404, detail="Audio file not found")
     
+    # Get file info
+    file_path = track.audio_path
+    file_size = os.path.getsize(file_path)
+    
     # Determine media type based on file extension
-    ext = os.path.splitext(track.audio_path)[1].lower()
+    ext = os.path.splitext(file_path)[1].lower()
     media_type_map = {
         '.mp3': 'audio/mpeg',
         '.wav': 'audio/wav',
@@ -52,10 +56,59 @@ def stream_audio(track_id: int, db: Session = Depends(get_db)):
     }
     media_type = media_type_map.get(ext, 'audio/mpeg')
     
+    # Handle Range requests for seeking
+    range_header = request.headers.get("range")
+    
+    if range_header:
+        # Parse Range header (e.g., "bytes=12345-")
+        try:
+            range_spec = range_header.replace("bytes=", "")
+            parts = range_spec.split("-")
+            start = int(parts[0]) if parts[0] else 0
+            end = int(parts[1]) if parts[1] else file_size - 1
+            
+            # Validate range
+            if start >= file_size:
+                raise HTTPException(status_code=416, detail="Range not satisfiable")
+            
+            end = min(end, file_size - 1)
+            content_length = end - start + 1
+            
+            def iter_file():
+                with open(file_path, "rb") as f:
+                    f.seek(start)
+                    remaining = content_length
+                    chunk_size = 8192
+                    while remaining > 0:
+                        read_size = min(chunk_size, remaining)
+                        data = f.read(read_size)
+                        if not data:
+                            break
+                        remaining -= len(data)
+                        yield data
+            
+            return StreamingResponse(
+                iter_file(),
+                status_code=206,
+                media_type=media_type,
+                headers={
+                    "Content-Range": f"bytes {start}-{end}/{file_size}",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(content_length),
+                }
+            )
+        except (ValueError, IndexError):
+            pass  # Fall through to regular response
+    
+    # No Range header - return full file with Accept-Ranges header
     return FileResponse(
-        track.audio_path,
+        file_path,
         media_type=media_type,
-        filename=os.path.basename(track.audio_path)
+        filename=os.path.basename(file_path),
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Length": str(file_size),
+        }
     )
 
 
@@ -120,4 +173,3 @@ def scan_library(db: Session = Depends(get_db)):
         "added": added,
         "message": f"Scanned {scanned} files, added {added} new tracks."
     }
-

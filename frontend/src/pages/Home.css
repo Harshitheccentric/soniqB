@@ -1,6 +1,6 @@
 /**
  * Home Page Styles - Premium Edition
- * Clean layout with interactive background
+ * Dynamic layout based on sidebar state
  */
 
 .home-page {
@@ -11,63 +11,99 @@
   overflow: hidden;
 }
 
-/* Layout */
+/* CSS Variables for dynamic positioning */
+.home-page--sidebar-open {
+  --sidebar-width: 260px;
+}
+
+.home-page--sidebar-closed {
+  --sidebar-width: 80px;
+}
+
+/* Layout - Sidebar full height, content aligned */
 .home-page__body {
   flex: 1;
   display: flex;
   overflow: hidden;
-  padding-bottom: 140px;
+  padding-bottom: 120px;
   position: relative;
   z-index: 1;
 }
 
 .home-page__main {
   flex: 1;
-  padding: var(--space-2xl);
+  padding: var(--space-xl);
   overflow-y: auto;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  transition: padding 0.3s ease;
 }
 
 .home-page__content {
-  flex: 1;
   width: 100%;
   max-width: 700px;
-  margin: 0 auto;
-  background: var(--bg-card);
+  min-height: 500px;
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px);
   border-radius: 24px;
-  padding: var(--space-2xl);
-  border: 1px solid var(--border-light);
+  padding: var(--space-xl);
+  border: 1px solid rgba(141, 90, 151, 0.08);
   box-shadow:
     0 24px 64px rgba(0, 0, 0, 0.08),
     0 8px 24px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  margin-top: var(--space-lg);
 }
 
 .home-page__content:hover {
   box-shadow:
     0 24px 64px rgba(0, 0, 0, 0.08),
     0 8px 24px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
     0 0 40px var(--glow-primary),
     0 0 80px var(--glow-secondary);
   transform: translateY(-2px);
 }
 
+/* Dark Mode Override */
+[data-theme="dark"] .home-page__content {
+  background: rgba(30, 30, 40, 0.85);
+  border-color: rgba(141, 90, 151, 0.15);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .home-page__content:hover {
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 40px rgba(141, 90, 151, 0.4),
+    0 0 80px rgba(141, 90, 151, 0.25);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .home-page--sidebar-open {
+    --sidebar-width: 200px;
+  }
+
   .home-page__main {
-    padding: var(--space-lg);
+    padding: var(--space-md);
   }
 
   .home-page__content {
     padding: var(--space-lg);
     border-radius: 20px;
+    min-height: auto;
+    margin-top: 0;
   }
 
   .home-page__body {
-    padding-bottom: 160px;
+    padding-bottom: 140px;
   }
 }

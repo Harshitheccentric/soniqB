@@ -1,16 +1,21 @@
 /**
- * PlaylistCard Styles
+ * PlaylistCard Styles - Dark Mode Ready
  */
 
 .playlist-card {
   min-width: 320px;
   max-width: 400px;
   scroll-snap-align: start;
-  transition: transform var(--transition-fast);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  transition: transform var(--transition-fast), box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .playlist-card:hover {
   transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 30px var(--glow-primary);
 }
 
 .playlist-card__header {
@@ -24,7 +29,7 @@
 }
 
 .playlist-card__header:hover {
-  background: rgba(141, 90, 151, 0.05);
+  background: rgba(141, 90, 151, 0.08);
 }
 
 .playlist-card__icon {
@@ -62,7 +67,7 @@
 .playlist-card__tracks {
   margin-top: var(--space-md);
   padding-top: var(--space-md);
-  border-top: 1px solid var(--pale-slate);
+  border-top: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -119,7 +124,7 @@
   font-size: var(--font-size-xs);
   padding: 2px var(--space-sm);
   background: var(--celadon);
-  color: var(--color-text-primary);
+  color: var(--color-text-inverse);
   border-radius: var(--radius-sm);
   flex-shrink: 0;
   text-transform: uppercase;

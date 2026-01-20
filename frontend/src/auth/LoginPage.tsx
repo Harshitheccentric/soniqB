@@ -28,7 +28,7 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (session.isAuthenticated) {
-      navigate('/');
+      navigate('/app');
     }
   }, [session.isAuthenticated, navigate]);
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
     const user = users.find(u => u.id === parseInt(selectedUserId, 10));
     if (user) {
       initializeSession(user);
-      navigate('/');
+      navigate('/app');
     }
   };
 
@@ -77,7 +77,7 @@ export default function LoginPage() {
       setLoading(true);
       const user = await createUser(newUsername.trim());
       initializeSession(user);
-      navigate('/');
+      navigate('/app');
     } catch (err: any) {
       const message = err.response?.data?.detail || 'Failed to create user';
       setError(message);

@@ -7,7 +7,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SessionProvider, useSession } from './hooks/useSession.tsx';
 import { AudioPlayerProvider } from './hooks/useAudioPlayer';
 import { ThemeProvider } from './context/ThemeContext';
+import { SidebarProvider } from './context/SidebarContext';
 import { useEventLogger } from './hooks/useEventLogger';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './auth/LoginPage';
 import Home from './pages/Home';
 import './styles/theme.css';
@@ -17,7 +19,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session } = useSession();
 
   if (!session.isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/signin" replace />;
   }
 
   return <>{children}</>;
@@ -31,19 +33,10 @@ function EventLoggerWrapper({ children }: { children: React.ReactNode }) {
   const { session } = useSession();
 
   // Event logging callbacks - now safely inside AudioPlayerProvider
-  const {
-    handlePlay,
-    handlePause,
-    handleSkip,
-    handleSeek,
-    handleTrackEnd,
-  } = useEventLogger({
+  useEventLogger({
     user: session.user,
     enabled: session.isAuthenticated,
   });
-
-  // Pass callbacks to AudioPlayerProvider via context or render props
-  // For now, we just need to initialize the hook to enable logging
 
   return <>{children}</>;
 }
@@ -51,15 +44,21 @@ function EventLoggerWrapper({ children }: { children: React.ReactNode }) {
 function AppContent() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      {/* Public Routes */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/signin" element={<LoginPage />} />
+
+      {/* Protected Routes */}
       <Route
-        path="/"
+        path="/app"
         element={
           <ProtectedRoute>
             <Home />
           </ProtectedRoute>
         }
       />
+
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -69,13 +68,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <SessionProvider>
-          <AudioPlayerProvider>
-            <EventLoggerWrapper>
-              <AppContent />
-            </EventLoggerWrapper>
-          </AudioPlayerProvider>
-        </SessionProvider>
+        <SidebarProvider>
+          <SessionProvider>
+            <AudioPlayerProvider>
+              <EventLoggerWrapper>
+                <AppContent />
+              </EventLoggerWrapper>
+            </AudioPlayerProvider>
+          </SessionProvider>
+        </SidebarProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

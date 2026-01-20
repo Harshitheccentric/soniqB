@@ -1,8 +1,9 @@
 /**
- * Sidebar Component - Premium Edition
- * Navigation panel with proper SVG icons
+ * Sidebar Component - Premium Edition with Toggle
+ * Collapsible navigation panel with proper SVG icons
  */
 
+import { useSidebar } from '../../context/SidebarContext';
 import './Sidebar.css';
 
 export type ViewType = 'nowPlaying' | 'metrics' | 'playlists';
@@ -37,6 +38,23 @@ const icons = {
             <path d="M12 18H3" />
         </svg>
     ),
+    toggle: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12h18" />
+            <path d="M3 6h18" />
+            <path d="M3 18h18" />
+        </svg>
+    ),
+    chevronLeft: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+        </svg>
+    ),
+    chevronRight: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+        </svg>
+    ),
 };
 
 interface NavItem {
@@ -52,8 +70,19 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
+    const { isOpen, toggle } = useSidebar();
+
     return (
-        <aside className="sidebar">
+        <aside className={`sidebar ${isOpen ? 'sidebar--open' : 'sidebar--closed'}`}>
+            {/* Toggle Button */}
+            <button
+                className="sidebar__toggle"
+                onClick={toggle}
+                aria-label={isOpen ? 'Close sidebar' : 'Open sidebar'}
+            >
+                {isOpen ? icons.chevronLeft : icons.chevronRight}
+            </button>
+
             <div className="sidebar__brand">
                 <div className="sidebar__brand-icon">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -62,27 +91,28 @@ export default function Sidebar({ activeView, onViewChange }: SidebarProps) {
                         <path d="M8 12C8 12 10 16 12 16C14 16 16 12 16 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                 </div>
-                <span className="sidebar__brand-text">SoniqB</span>
+                {isOpen && <span className="sidebar__brand-text">SoniqB</span>}
             </div>
 
             <nav className="sidebar__nav">
-                <div className="sidebar__nav-label">Menu</div>
+                {isOpen && <div className="sidebar__nav-label">Menu</div>}
                 {navItems.map((item) => (
                     <button
                         key={item.id}
                         className={`sidebar__item ${activeView === item.id ? 'sidebar__item--active' : ''}`}
                         onClick={() => onViewChange(item.id)}
                         aria-current={activeView === item.id ? 'page' : undefined}
+                        title={!isOpen ? item.label : undefined}
                     >
                         <span className="sidebar__icon">{item.icon}</span>
-                        <span className="sidebar__label">{item.label}</span>
-                        {activeView === item.id && <span className="sidebar__active-dot" />}
+                        {isOpen && <span className="sidebar__label">{item.label}</span>}
+                        {activeView === item.id && isOpen && <span className="sidebar__active-dot" />}
                     </button>
                 ))}
             </nav>
 
             <div className="sidebar__footer">
-                <div className="sidebar__version">v2.0</div>
+                {isOpen && <div className="sidebar__version">v2.0</div>}
             </div>
         </aside>
     );

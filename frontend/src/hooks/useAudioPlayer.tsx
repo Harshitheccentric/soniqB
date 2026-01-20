@@ -13,15 +13,15 @@ interface AudioPlayerContextValue extends AudioPlayerState {
   skip: () => void;
   seekTo: (time: number) => void;
   setVolume: (volume: number) => void;
-  
+
   // Queue management
   setQueue: (tracks: Track[], startIndex?: number) => void;
   addToQueue: (track: Track) => void;
   clearQueue: () => void;
-  
+
   // Audio element ref
   audioRef: React.RefObject<HTMLAudioElement>;
-  
+
   // Playback events (for event logging)
   onPlay?: () => void;
   onPause?: () => void;
@@ -41,8 +41,8 @@ interface AudioPlayerProviderProps {
   onTrackEnd?: () => void;
 }
 
-export function AudioPlayerProvider({ 
-  children, 
+export function AudioPlayerProvider({
+  children,
   onPlay: onPlayCallback,
   onPause: onPauseCallback,
   onSkip: onSkipCallback,
@@ -50,7 +50,7 @@ export function AudioPlayerProvider({
   onTrackEnd: onTrackEndCallback,
 }: AudioPlayerProviderProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  
+
   const [state, setState] = useState<AudioPlayerState>({
     currentTrack: null,
     isPlaying: false,
@@ -92,7 +92,7 @@ export function AudioPlayerProvider({
   // Skip to next track
   const skip = () => {
     const nextIndex = state.queueIndex + 1;
-    
+
     if (nextIndex < state.queue.length) {
       setState(prev => ({
         ...prev,
@@ -188,7 +188,7 @@ export function AudioPlayerProvider({
     const audio = audioRef.current;
     if (!audio || !state.currentTrack) return;
 
-    const audioUrl = `http://localhost:8000/tracks/${state.currentTrack.id}/stream`;
+    const audioUrl = `http://localhost:8000/audio/${state.currentTrack.id}`;
     audio.src = audioUrl;
     audio.volume = state.volume;
 

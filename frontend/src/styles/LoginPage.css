@@ -63,7 +63,7 @@
 
 .login-card__subtitle {
   font-size: var(--font-size-md);
-  color: var(--color-text-secondary);
+  color: #555555;
   margin: 0;
   font-weight: 400;
 }
@@ -83,7 +83,7 @@
 .login-form__label {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: #333333;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -114,7 +114,7 @@
   width: 100%;
   padding: var(--space-md);
   font-size: var(--font-size-md);
-  color: var(--color-text-primary);
+  color: #333333;
   background: white;
   border: 2px solid var(--pale-slate);
   border-radius: var(--radius-md);
@@ -210,12 +210,12 @@
 .login-card__notice p {
   margin: var(--space-xs) 0;
   font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  color: #666666;
 }
 
 .login-card__notice p:first-child {
   font-weight: 600;
-  color: var(--color-text-secondary);
+  color: #444444;
 }
 
 /* Responsive */
