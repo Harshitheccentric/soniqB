@@ -1,8 +1,3 @@
-/**
- * Home Page - Premium Edition
- * Main observatory interface with collapsible sidebar and upload modal
- */
-
 import { useState } from 'react';
 import { useSession } from '../hooks/useSession';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
@@ -16,6 +11,7 @@ import TrackLibrary from '../components/library/TrackLibrary';
 import Analysis from '../pages/Analysis';
 import ControlDock from '../components/controls/ControlDock';
 import UploadSong from '../components/UploadSong';
+import IntroOverlay from '../components/IntroOverlay';
 import type { Track } from '../types';
 import './Home.css';
 
@@ -25,6 +21,7 @@ export default function Home() {
   const { isOpen: sidebarOpen } = useSidebar();
   const [activeView, setActiveView] = useState<ViewType>('nowPlaying');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [introSeen, setIntroSeen] = useState(false);
 
   const handleLogout = () => {
     clearSession();
@@ -66,6 +63,9 @@ export default function Home() {
 
   return (
     <div className={`home-page ${sidebarOpen ? 'home-page--sidebar-open' : 'home-page--sidebar-closed'}`}>
+      {/* Intro Animation */}
+      {!introSeen && <IntroOverlay onComplete={() => setIntroSeen(true)} />}
+
       {/* Interactive Cursor-Following Background */}
       <InteractiveBackground />
 
