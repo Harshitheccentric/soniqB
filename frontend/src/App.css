@@ -1197,3 +1197,461 @@ body {
     font-size: 2.5rem;
   }
 }
+
+/* ========================================
+   UPLOAD SONG MODAL
+   ======================================== */
+
+.upload-song-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.upload-song-content {
+  background: #181818;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid #282828;
+}
+
+.upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.upload-header h2 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #b3b3b3;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.upload-dropzone {
+  border: 2px dashed #282828;
+  border-radius: 10px;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: #121212;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.upload-dropzone.drag-active {
+  border-color: #1DB954;
+  background: rgba(29, 185, 84, 0.1);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.upload-text {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.upload-subtext {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+  margin: 1rem 0;
+}
+
+.file-input-label {
+  display: inline-block;
+}
+
+.browse-btn {
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background: #1DB954;
+  color: #000000;
+  border-radius: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.browse-btn:hover {
+  background: #1ed760;
+  transform: scale(1.05);
+}
+
+.upload-hint {
+  color: #6a6a6a;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+}
+
+.file-selected {
+  padding: 1rem;
+}
+
+.file-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.file-name {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.file-size {
+  color: #b3b3b3;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.change-file-btn {
+  padding: 0.6rem 1.5rem;
+  background: #282828;
+  color: #ffffff;
+  border: 1px solid #282828;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.change-file-btn:hover {
+  background: #3e3e3e;
+  border-color: #1DB954;
+}
+
+.upload-error {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.upload-error p {
+  color: #e74c3c;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.upload-progress {
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #282828;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1DB954 0%, #1ed760 100%);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  color: #1DB954;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.upload-btn {
+  padding: 0.85rem 2.5rem;
+  background: #1DB954;
+  color: #000000;
+  border: none;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background: #1ed760;
+  transform: scale(1.05);
+}
+
+.upload-btn:disabled {
+  background: #282828;
+  color: #535353;
+  cursor: not-allowed;
+}
+
+.upload-success {
+  text-align: center;
+  padding: 1rem;
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.upload-success h3 {
+  color: #1DB954;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.uploaded-track-info {
+  background: #121212;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.uploaded-track-info p {
+  color: #b3b3b3;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+}
+
+.uploaded-track-info p:last-child {
+  margin-bottom: 0;
+}
+
+.uploaded-track-info strong {
+  color: #ffffff;
+  margin-right: 0.5rem;
+}
+
+.confidence {
+  color: #1DB954;
+  font-size: 0.85rem;
+}
+
+.success-message {
+  color: #b3b3b3;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.upload-another-btn,
+.done-btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-another-btn {
+  background: #282828;
+  color: #ffffff;
+  border: 1px solid #282828;
+}
+
+.upload-another-btn:hover {
+  background: #3e3e3e;
+  border-color: #1DB954;
+}
+
+.done-btn {
+  background: #1DB954;
+  color: #000000;
+}
+
+.done-btn:hover {
+  background: #1ed760;
+  transform: scale(1.05);
+}
+
+/* ========================================
+   LIBRARY VIEW
+   ======================================== */
+
+.library-view {
+  padding: 2rem 0;
+}
+
+.library-header {
+  margin-bottom: 2.5rem;
+}
+
+.library-header h1 {
+  color: #ffffff;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.library-subtitle {
+  color: #b3b3b3;
+  font-size: 1rem;
+}
+
+.library-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.playlist-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section-title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.playlist-card {
+  background: #181818;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.playlist-card:hover {
+  background: #282828;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+}
+
+.liked-songs-card:hover {
+  border-color: #e91e63;
+}
+
+.uploaded-songs-card:hover {
+  border-color: #1DB954;
+}
+
+.manual-playlist-card:hover {
+  border-color: #8b5cf6;
+}
+
+.playlist-icon {
+  font-size: 3rem;
+  flex-shrink: 0;
+}
+
+.playlist-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.playlist-info h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playlist-type-badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.playlist-type-badge.liked {
+  background: #e91e63;
+  color: #ffffff;
+}
+
+.playlist-type-badge.uploaded {
+  background: #1DB954;
+  color: #000000;
+}
+
+.playlist-type-badge.manual {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.empty-library {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #181818;
+  border-radius: 12px;
+  border: 1px solid #282828;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-library h3 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.empty-library p {
+  color: #b3b3b3;
+  font-size: 1rem;
+}

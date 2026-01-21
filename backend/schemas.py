@@ -38,9 +38,12 @@ class TrackResponse(BaseModel):
     audio_path: str
     predicted_genre: Optional[str] = None
     genre_confidence: Optional[float] = None
+    uploaded_by_user_id: Optional[int] = None
+    uploaded_by_username: Optional[str] = None
     
     class Config:
         from_attributes = True
+
 
 
 # Event schemas

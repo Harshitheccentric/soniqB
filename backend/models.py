@@ -29,10 +29,20 @@ class Track(Base):
     audio_path = Column(String, nullable=False)
     predicted_genre = Column(String, nullable=True)  # ML-predicted genre
     genre_confidence = Column(Float, nullable=True)  # Prediction confidence (0-1)
+    uploaded_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # User who uploaded this track
     
     # Relationships
     listening_events = relationship("ListeningEvent", back_populates="track")
     playlist_tracks = relationship("PlaylistTrack", back_populates="track")
+    uploaded_by = relationship("User", foreign_keys=[uploaded_by_user_id])
+
+    @property
+    def uploaded_by_username(self):
+        """Return username of uploader if available."""
+        if self.uploaded_by:
+            return self.uploaded_by.username
+        return None
+
 
 
 class ListeningEvent(Base):

@@ -50,7 +50,12 @@ export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
 
       <div className="active-track-panel__meta">
         <h2 className="active-track-panel__title">{track.title}</h2>
-        <p className="active-track-panel__artist">{track.artist}</p>
+        <p className="active-track-panel__artist">
+          {track.artist}
+          {track.uploaded_by_username && (
+            <span className="active-track-panel__uploader"> • Uploaded by {track.uploaded_by_username}</span>
+          )}
+        </p>
 
         {track.predicted_genre && (
           <div className="active-track-panel__genre">

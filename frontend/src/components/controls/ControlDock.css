@@ -205,6 +205,37 @@
   color: var(--color-text-muted);
 }
 
+/* Like Button */
+.control-dock__like-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.control-dock__like-btn:hover:not(:disabled) {
+  background: rgba(233, 30, 99, 0.15);
+  color: #e91e63;
+  transform: scale(1.1);
+}
+
+.control-dock__like-btn--liked {
+  color: #e91e63;
+}
+
+.control-dock__like-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 /* Controls */
 .control-dock__controls {
   display: flex;

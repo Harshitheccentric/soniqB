@@ -144,6 +144,22 @@ export const scanTracks = async () => {
     return response.data;
 };
 
+// Track upload - Updated to send user_id
+export const uploadTrack = async (file, userId, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('user_id', userId.toString());
+
+    const response = await api.post('/tracks/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress,
+    });
+    return response.data;
+};
+
+
 // ML API calls (Phase 3)
 export const getMLStatus = async () => {
     const response = await api.get('/ml/status');
@@ -173,5 +189,3 @@ export const calibrateTrack = async (trackId, genre) => {
 };
 
 export default api;
-
-

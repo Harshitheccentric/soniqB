@@ -1,14 +1,18 @@
 """Track and audio streaming routes with Range request support for seeking."""
 import os
-from fastapi import APIRouter, Depends, HTTPException, Request
+import re
+from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import FileResponse, StreamingResponse, Response
 from sqlalchemy.orm import Session
 from typing import List
 from backend.db import get_db
-from backend.models import Track
+from backend.models import Track, User, Playlist, PlaylistTrack
 from backend.schemas import TrackResponse
+from backend.auth import get_current_user
 
 router = APIRouter(tags=["tracks"])
+
 
 
 @router.get("/tracks", response_model=List[TrackResponse])
@@ -173,3 +177,122 @@ def scan_library(db: Session = Depends(get_db)):
         "added": added,
         "message": f"Scanned {scanned} files, added {added} new tracks."
     }
+
+
+@router.post("/tracks/upload", response_model=TrackResponse)
+async def upload_track(
+    file: UploadFile = File(...),
+    user_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Upload a new track. The track will be:
+    1. Validated for file type
+    2. Saved to user's upload directory
+    3. Classified for genre using ML
+    4. Added to user's "Songs Uploaded" playlist
+    5. Artist name set to username
+    
+    Note: Uses user_id form parameter for identity-anchoring (no JWT required)
+    """
+    # Get user from database
+    current_user = db.query(User).filter(User.id == user_id).first()
+    if not current_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Validate file extension
+    valid_extensions = {'.mp3', '.wav', '.ogg', '.m4a', '.flac', '.opus'}
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    
+    if file_ext not in valid_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Supported: {', '.join(valid_extensions)}"
+        )
+    
+    # Create user upload directory
+    upload_dir = Path(f"backend/storage/audio/uploads/{current_user.id}")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate safe filename
+    safe_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '_', file.filename)
+    file_path = upload_dir / safe_filename
+    
+    # Check if file already exists
+    counter = 1
+    original_path = file_path
+    while file_path.exists():
+        stem = original_path.stem
+        file_path = upload_dir / f"{stem}_{counter}{file_ext}"
+        counter += 1
+    
+    # Save file
+    try:
+        contents = await file.read()
+        with open(file_path, 'wb') as f:
+            f.write(contents)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    # Extract title from filename
+    title = os.path.splitext(safe_filename)[0]
+    # Remove common patterns like [ID] tags
+    title = re.sub(r'\s*\[.*?\]', '', title).strip()
+    title = title.replace('_', ' ')
+    
+    # Classify genre using ML
+    genre = None
+    confidence = None
+    try:
+        from backend.ml.genre_classifier import get_genre_classifier
+        classifier = get_genre_classifier()
+        genre, confidence = classifier.classify_audio_file(str(file_path))
+    except Exception as e:
+        print(f"Warning: Genre classification failed: {e}")
+        # Continue without genre - not critical
+    
+    # Create track record
+    new_track = Track(
+        title=title,
+        artist=current_user.username,  # User is the artist
+        audio_path=str(file_path),
+        predicted_genre=genre,
+        genre_confidence=confidence,
+        uploaded_by_user_id=current_user.id
+    )
+    db.add(new_track)
+    db.flush()  # Get the track ID
+    
+    # Get or create "Songs Uploaded" playlist
+    uploaded_playlist = db.query(Playlist).filter(
+        Playlist.user_id == current_user.id,
+        Playlist.type == "uploaded_songs"
+    ).first()
+    
+    if not uploaded_playlist:
+        uploaded_playlist = Playlist(
+            user_id=current_user.id,
+            name="Songs Uploaded",
+            type="uploaded_songs"
+        )
+        db.add(uploaded_playlist)
+        db.flush()
+    
+    # Add track to playlist
+    # Get next position
+    max_position = db.query(PlaylistTrack).filter(
+        PlaylistTrack.playlist_id == uploaded_playlist.id
+    ).count()
+    
+    playlist_track = PlaylistTrack(
+        playlist_id=uploaded_playlist.id,
+        track_id=new_track.id,
+        position=max_position
+    )
+    db.add(playlist_track)
+    
+    db.commit()
+    db.refresh(new_track)
+    
+    return new_track
+

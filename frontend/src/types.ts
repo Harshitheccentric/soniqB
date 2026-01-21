@@ -43,6 +43,7 @@ export interface Track {
   audio_path: string;
   predicted_genre: string | null;
   genre_confidence: number | null;
+  uploaded_by_username?: string;
 }
 
 // ============================================

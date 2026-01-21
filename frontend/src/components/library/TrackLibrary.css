@@ -1,5 +1,5 @@
 /**
- * TrackLibrary Styles - Dark Mode Ready
+ * TrackLibrary Styles - Enhanced with Playlists
  */
 
 .track-library {
@@ -10,23 +10,142 @@
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-text-primary);
-    margin: 0 0 var(--space-sm) 0;
-    letter-spacing: -0.02em;
-}
-
-.track-library__count {
-    font-size: 0.875rem;
-    color: var(--color-text-muted);
     margin: 0 0 var(--space-lg) 0;
 }
 
-.track-library__loading,
-.track-library__error {
-    text-align: center;
-    padding: var(--space-2xl);
-    color: var(--color-text-muted);
+.track-library__header {
+    margin-bottom: var(--space-lg);
 }
 
+.track-library__back-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: transparent;
+    border: none;
+    color: var(--vintage-lavender);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+}
+
+.track-library__back-btn:hover {
+    background: rgba(141, 90, 151, 0.1);
+}
+
+.track-library__playlist-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.track-library__playlist-header-icon {
+    font-size: 4rem;
+}
+
+.track-library__track-count {
+    margin-left: var(--space-md);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+}
+
+.track-library__tabs {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.track-library__tab {
+    padding: var(--space-md) var(--space-lg);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.track-library__tab:hover {
+    color: var(--color-text-primary);
+}
+
+.track-library__tab--active {
+    color: var(--vintage-lavender);
+    border-bottom-color: var(--vintage-lavender);
+}
+
+.track-library__playlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-lg);
+}
+
+.track-library__playlist-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.track-library__playlist-card:hover {
+    background: rgba(141, 90, 151, 0.1);
+    border-color: var(--vintage-lavender);
+    transform: translateY(-4px);
+}
+
+.track-library__playlist-icon {
+    font-size: 3rem;
+}
+
+.track-library__playlist-info h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.track-library__playlist-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.track-library__playlist-badge--liked_songs {
+    background: #e91e63;
+    color: white;
+}
+
+.track-library__playlist-badge--uploaded_songs {
+    background: var(--celadon);
+    color: var(--color-text-inverse);
+}
+
+.track-library__playlist-badge--manual {
+    background: var(--vintage-lavender);
+    color: white;
+}
+
+.track-library__loading,
+.track-library__error,
 .track-library__empty {
     text-align: center;
     padding: var(--space-2xl);
@@ -64,8 +183,6 @@
 .track-library__item:hover {
     background: rgba(141, 90, 151, 0.1);
     border-color: var(--vintage-lavender);
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px var(--glow-primary);
 }
 
 .track-library__number {
@@ -73,7 +190,6 @@
     font-size: 0.75rem;
     color: var(--color-text-muted);
     text-align: center;
-    flex-shrink: 0;
 }
 
 .track-library__icon {
@@ -85,7 +201,6 @@
     background: linear-gradient(135deg, var(--vintage-lavender) 0%, var(--dusty-mauve) 100%);
     border-radius: 8px;
     color: white;
-    flex-shrink: 0;
 }
 
 .track-library__info {
@@ -108,9 +223,6 @@
 .track-library__artist {
     font-size: 0.8125rem;
     color: var(--color-text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .track-library__genre {
@@ -121,15 +233,4 @@
     border-radius: var(--radius-full);
     text-transform: uppercase;
     font-weight: 600;
-    letter-spacing: 0.05em;
-    flex-shrink: 0;
-}
-
-/* Dark mode specific */
-[data-theme="dark"] .track-library__item {
-    background: rgba(30, 30, 40, 0.6);
-}
-
-[data-theme="dark"] .track-library__item:hover {
-    background: rgba(141, 90, 151, 0.15);
 }

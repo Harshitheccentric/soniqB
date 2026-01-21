@@ -60,17 +60,9 @@ def create_manual_playlist(
 @router.get("/{user_id}", response_model=List[PlaylistResponse])
 def get_user_playlists(
     user_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
-    """Get all playlists for the authenticated user."""
-    # Verify the user is accessing their own playlists
-    if user_id != current_user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only view your own playlists"
-        )
-    
+    """Get all playlists for a user (identity-anchoring - no JWT required)."""
     playlists = db.query(Playlist).filter(Playlist.user_id == user_id).all()
     return playlists
 
@@ -78,21 +70,13 @@ def get_user_playlists(
 @router.get("/detail/{playlist_id}")
 def get_playlist_with_tracks(
     playlist_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
-    """Get a playlist with all its tracks."""
+    """Get a playlist with all its tracks (identity-anchoring - no JWT required)."""
     playlist = db.query(Playlist).filter(Playlist.id == playlist_id).first()
     
     if not playlist:
         raise HTTPException(status_code=404, detail="Playlist not found")
-    
-    # Verify ownership
-    if playlist.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only view your own playlists"
-        )
     
     # Get tracks in playlist with position order
     playlist_tracks = db.query(PlaylistTrack, Track).join(
@@ -185,3 +169,64 @@ def remove_track_from_playlist(
     db.commit()
     
     return None
+
+
+@router.post("/simple", status_code=201)
+def create_simple_playlist(
+    user_id: int,
+    name: str,
+    db: Session = Depends(get_db)
+):
+    """Create a manual playlist (identity-anchoring - no JWT)."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    playlist = Playlist(
+        user_id=user_id,
+        name=name,
+        type="manual"
+    )
+    db.add(playlist)
+    db.commit()
+    db.refresh(playlist)
+    return {"id": playlist.id, "name": playlist.name, "type": playlist.type, "user_id": playlist.user_id}
+
+
+@router.post("/{playlist_id}/add-track", status_code=201)
+def add_track_to_playlist(
+    playlist_id: int,
+    track_id: int,
+    db: Session = Depends(get_db)
+):
+    """Add track to playlist (identity-anchoring - no JWT)."""
+    playlist = db.query(Playlist).filter(Playlist.id == playlist_id).first()
+    if not playlist:
+        raise HTTPException(status_code=404, detail="Playlist not found")
+    
+    track = db.query(Track).filter(Track.id == track_id).first()
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+    
+    # Check if already in playlist
+    existing = db.query(PlaylistTrack).filter(
+        PlaylistTrack.playlist_id == playlist_id,
+        PlaylistTrack.track_id == track_id
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Track already in playlist")
+    
+    max_position = db.query(PlaylistTrack).filter(
+        PlaylistTrack.playlist_id == playlist_id
+    ).count()
+    
+    playlist_track = PlaylistTrack(
+        playlist_id=playlist_id,
+        track_id=track_id,
+        position=max_position
+    )
+    db.add(playlist_track)
+    db.commit()
+    
+    return {"message": "Track added to playlist"}

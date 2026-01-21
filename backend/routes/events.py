@@ -38,19 +38,16 @@ def get_events(
 @router.post("", response_model=EventResponse, status_code=201)
 def create_event(
     event: EventCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
-    Log a listening event for the authenticated user.
-    Events are append-only - never modified or aggregated.
+    Log a listening event (identity-anchoring - no JWT required).
+    Uses user_id from request body directly.
     """
-    # Verify the user is logging events for themselves
-    if event.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only log events for yourself"
-        )
+    # Validate user exists
+    user = db.query(User).filter(User.id == event.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Validate track exists
     track = db.query(Track).filter(Track.id == event.track_id).first()
@@ -70,19 +67,18 @@ def create_event(
     if event.event_type.value == "like":
         # Get or create Liked Songs playlist
         liked_playlist = db.query(Playlist).filter(
-            Playlist.user_id == current_user.id,
+            Playlist.user_id == event.user_id,
             Playlist.type == "liked_songs"
         ).first()
         
         if not liked_playlist:
-            # Create if doesn't exist (safety fallback)
             liked_playlist = Playlist(
-                user_id=current_user.id,
+                user_id=event.user_id,
                 name="Liked Songs",
                 type="liked_songs"
             )
             db.add(liked_playlist)
-            db.flush()  # Get the ID
+            db.flush()
         
         # Check if track is already in the playlist
         existing = db.query(PlaylistTrack).filter(
@@ -91,12 +87,10 @@ def create_event(
         ).first()
         
         if not existing:
-            # Get the next position
             max_position = db.query(PlaylistTrack).filter(
                 PlaylistTrack.playlist_id == liked_playlist.id
             ).count()
             
-            # Add track to playlist
             playlist_track = PlaylistTrack(
                 playlist_id=liked_playlist.id,
                 track_id=event.track_id,
@@ -107,3 +101,4 @@ def create_event(
     db.commit()
     db.refresh(db_event)
     return db_event
+

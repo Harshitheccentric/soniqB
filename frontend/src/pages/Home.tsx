@@ -1,6 +1,6 @@
 /**
  * Home Page - Premium Edition
- * Main observatory interface with collapsible sidebar
+ * Main observatory interface with collapsible sidebar and upload modal
  */
 
 import { useState } from 'react';
@@ -14,6 +14,7 @@ import ActiveTrackPanel from '../components/track/ActiveTrackPanel';
 import MetricsPanel from '../components/metrics/MetricsPanel';
 import TrackLibrary from '../components/library/TrackLibrary';
 import ControlDock from '../components/controls/ControlDock';
+import UploadSong from '../components/UploadSong';
 import type { Track } from '../types';
 import './Home.css';
 
@@ -22,6 +23,7 @@ export default function Home() {
   const { setQueue, play, currentTrack } = useAudioPlayer();
   const { isOpen: sidebarOpen } = useSidebar();
   const [activeView, setActiveView] = useState<ViewType>('nowPlaying');
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleLogout = () => {
     clearSession();
@@ -35,6 +37,11 @@ export default function Home() {
       play(allTracks[trackIndex]);
       setActiveView('nowPlaying');
     }
+  };
+
+  const handleUploadComplete = (track: any) => {
+    console.log('Upload complete:', track);
+    setShowUploadModal(false);
   };
 
   if (!session.user) {
@@ -62,7 +69,11 @@ export default function Home() {
       <SessionHeader user={session.user} onLogout={handleLogout} />
 
       <div className="home-page__body">
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
+        <Sidebar
+          activeView={activeView}
+          onViewChange={setActiveView}
+          onUploadClick={() => setShowUploadModal(true)}
+        />
 
         <main className="home-page__main">
           <div className="home-page__content">
@@ -72,6 +83,14 @@ export default function Home() {
       </div>
 
       <ControlDock />
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <UploadSong
+          onUploadComplete={handleUploadComplete}
+          onClose={() => setShowUploadModal(false)}
+        />
+      )}
     </div>
   );
 }
