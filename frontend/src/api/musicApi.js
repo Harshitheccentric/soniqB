@@ -13,13 +13,27 @@ const api = axios.create({
     },
 });
 
-// Add JWT token to requests if available
+// Add JWT token and User ID to requests if available
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('auth_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Add X-User-ID for identity anchoring (bypasses auth issues)
+        const userJson = localStorage.getItem('soniq_user');
+        if (userJson) {
+            try {
+                const user = JSON.parse(userJson);
+                if (user && user.id) {
+                    config.headers['X-User-ID'] = user.id.toString();
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+        }
+
         return config;
     },
     (error) => {
@@ -34,7 +48,7 @@ api.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             // Clear invalid token and redirect to login
             localStorage.removeItem('auth_token');
-            localStorage.removeItem('current_user');
+            localStorage.removeItem('soniq_user');
             window.location.href = '/';
         }
         return Promise.reject(error);
@@ -46,7 +60,7 @@ export const register = async (username, password) => {
     const response = await api.post('/auth/register', { username, password });
     if (response.data.access_token) {
         localStorage.setItem('auth_token', response.data.access_token);
-        localStorage.setItem('current_user', JSON.stringify(response.data.user));
+        localStorage.setItem('soniq_user', JSON.stringify(response.data.user));
     }
     return response.data;
 };
@@ -55,18 +69,18 @@ export const login = async (username, password) => {
     const response = await api.post('/auth/login', { username, password });
     if (response.data.access_token) {
         localStorage.setItem('auth_token', response.data.access_token);
-        localStorage.setItem('current_user', JSON.stringify(response.data.user));
+        localStorage.setItem('soniq_user', JSON.stringify(response.data.user));
     }
     return response.data;
 };
 
 export const logout = () => {
     localStorage.removeItem('auth_token');
-    localStorage.removeItem('current_user');
+    localStorage.removeItem('soniq_user');
 };
 
 export const getCurrentUser = () => {
-    const userJson = localStorage.getItem('current_user');
+    const userJson = localStorage.getItem('soniq_user');
     return userJson ? JSON.parse(userJson) : null;
 };
 
@@ -98,6 +112,10 @@ export const getTrack = async (trackId) => {
 
 export const getAudioUrl = (trackId) => {
     return `${API_BASE_URL}/audio/${trackId}`;
+};
+
+export const getAlbumArtUrl = (trackId) => {
+    return `${API_BASE_URL}/tracks/${trackId}/art`;
 };
 
 // Event logging API calls
@@ -135,6 +153,36 @@ export const removeTrackFromPlaylist = async (playlistId, trackId) => {
 
 export const createPlaylist = async (playlistData) => {
     const response = await api.post('/playlists/manual', playlistData);
+    return response.data;
+};
+
+export const createSimplePlaylist = async (userId, name) => {
+    const response = await api.post('/playlists/simple', null, {
+        params: { user_id: userId, name }
+    });
+    return response.data;
+};
+
+export const deletePlaylist = async (playlistId) => {
+    await api.delete(`/playlists/${playlistId}`);
+};
+
+export const renamePlaylist = async (playlistId, name, userId) => {
+    // Backend expects PlaylistCreate schema which needs user_id and tracks
+    // But our PUT route uses PlaylistCreate for 'name' validation mainly
+    // We should pass a JSON body matching the schema
+    const response = await api.put(`/playlists/${playlistId}`, {
+        name,
+        user_id: userId, // Required by schema even if unused for validation logic
+        tracks: []
+    });
+    return response.data;
+};
+
+export const addTrackToPlaylist = async (playlistId, trackId) => {
+    const response = await api.post(`/playlists/${playlistId}/add-track`, null, {
+        params: { track_id: trackId }
+    });
     return response.data;
 };
 

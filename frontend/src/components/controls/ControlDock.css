@@ -6,8 +6,13 @@
 .control-dock {
   position: fixed;
   bottom: var(--space-lg);
+  /* Center relative to content area
+     Adjusted offset to -4px (shaved another 20px left)
+  */
+  left: 50%;
   transform: translateX(-50%);
-  width: min(700px, calc(100% - 100px));
+  margin-left: -4px;
+  width: min(800px, calc(100% - 140px));
   background: var(--bg-control-dock);
   backdrop-filter: blur(32px);
   border-radius: 24px;
@@ -19,23 +24,16 @@
   padding: 0;
   z-index: var(--z-fixed);
   overflow: visible;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.3s ease,
-    box-shadow 0.3s ease,
-    transform 0.3s ease;
+    box-shadow 0.3s ease;
 }
 
-/* Sidebar Open - Offset to right */
-.control-dock--sidebar-open {
-  left: calc(260px + (100% - 260px) / 2);
-  width: min(700px, calc(100% - 320px));
-}
-
-/* Sidebar Closed - Centered more */
+/* Sidebar Open/Closed states - Unified for Dock */
+.control-dock--sidebar-open,
 .control-dock--sidebar-closed {
-  left: calc(80px + (100% - 80px) / 2);
-  width: min(700px, calc(100% - 140px));
+  left: calc(50% + 55px);
+  width: min(800px, calc(100% - 140px));
 }
 
 .control-dock:hover {

@@ -6,6 +6,11 @@
 import { useState, useEffect } from 'react';
 import { useSession } from '../../hooks/useSession';
 import type { Track } from '../../types';
+import { useAlert } from '../../context/AlertContext';
+import { deletePlaylist } from '../../api/musicApi';
+import ContextMenu from '../common/ContextMenu';
+import AddToPlaylistModal from '../common/AddToPlaylistModal';
+import RenamePlaylistModal from '../common/RenamePlaylistModal';
 import './TrackLibrary.css';
 
 interface TrackLibraryProps {
@@ -64,6 +69,19 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
     const [activeTab, setActiveTab] = useState<'playlists' | 'tracks'>('playlists');
     const [selectedPlaylist, setSelectedPlaylist] = useState<PlaylistDetail | null>(null);
     const [loadingPlaylist, setLoadingPlaylist] = useState(false);
+    const [classifying, setClassifying] = useState(false);
+    const [classificationResult, setClassificationResult] = useState<{ classified: number, total: number } | null>(null);
+
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number }>({ visible: false, x: 0, y: 0 });
+    const [contextMenuTrack, setContextMenuTrack] = useState<Track | null>(null);
+    const [contextMenuPlaylist, setContextMenuPlaylist] = useState<Playlist | null>(null);
+    const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+    const [showRenameModal, setShowRenameModal] = useState(false);
+    const [playlistModalMode, setPlaylistModalMode] = useState<'list' | 'create'>('list');
+
+    const { showAlert, closeAlert } = useAlert();
+
 
     useEffect(() => {
         fetchData();
@@ -86,6 +104,7 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
             }
         } catch (err) {
             console.error('Failed to fetch data:', err);
+            // Replace setError with alert if preferred or keep error state
             setError('Failed to load library');
         } finally {
             setLoading(false);
@@ -199,10 +218,100 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
         );
     }
 
+
+    const handleClassifyLibrary = async () => {
+        setClassifying(true);
+        try {
+            const response = await fetch('http://localhost:8000/ml/classify-all', {
+                method: 'POST',
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setClassificationResult({
+                    classified: data.classified,
+                    total: data.total_tracks
+                });
+                // Refresh tracks to show new genres
+                fetchData();
+
+                // Clear success message after 5 seconds
+                setTimeout(() => setClassificationResult(null), 5000);
+            }
+        } catch (err) {
+            console.error('Classification failed:', err);
+            setError('Failed to classify library');
+        } finally {
+            setClassifying(false);
+        }
+    };
+
+
+    const handleDeletePlaylist = async () => {
+        if (!contextMenuPlaylist) return;
+
+        showAlert({
+            title: 'Are you sure?',
+            description: `This will permanently delete the playlist "${contextMenuPlaylist.name}". This action cannot be undone.`,
+            cancelLabel: 'Cancel',
+            actions: [
+                {
+                    label: 'Yes, delete playlist',
+                    variant: 'danger',
+                    onClick: async () => {
+                        try {
+                            await deletePlaylist(contextMenuPlaylist.id);
+                            closeAlert(); // Close the modal
+                            // Show success alert
+                            setTimeout(() => {
+                                showAlert({ title: 'Success', description: `Deleted playlist "${contextMenuPlaylist.name}"` });
+                            }, 300);
+                            fetchData();
+                        } catch (err) {
+                            console.error('Failed to delete playlist', err);
+                            showAlert({ title: 'Error', description: 'Failed to delete playlist' });
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
     // Main Library View
     return (
         <div className="track-library">
-            <h2 className="track-library__title">📚 Your Library</h2>
+            <div className="track-library__header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 className="track-library__title" style={{ margin: 0 }}>📚 Your Library</h2>
+                <button
+                    className="track-library__action-btn"
+                    onClick={handleClassifyLibrary}
+                    disabled={classifying}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        background: classifying ? '#666' : '#1db954',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '20px',
+                        cursor: classifying ? 'not-allowed' : 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    {classifying ? '✨ Classifying...' : '✨ Classify Library'}
+                </button>
+            </div>
+
+            {classificationResult && (
+                <div style={{
+                    padding: '1rem',
+                    background: 'rgba(29, 185, 84, 0.1)',
+                    border: '1px solid #1db954',
+                    borderRadius: '8px',
+                    marginBottom: '1rem',
+                    color: '#fff'
+                }}>
+                    ✅ Successfully classified {classificationResult.classified} of {classificationResult.total} tracks!
+                </div>
+            )}
 
             <div className="track-library__tabs">
                 <button
@@ -233,6 +342,12 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                                     key={playlist.id}
                                     className="track-library__playlist-card"
                                     onClick={() => openPlaylist(playlist)}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        setContextMenuPlaylist(playlist);
+                                        setContextMenuTrack(null); // Clear track selection
+                                        setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+                                    }}
                                 >
                                     <div className="track-library__playlist-icon">
                                         {getPlaylistIcon(playlist.type)}
@@ -263,6 +378,11 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                                     key={track.id}
                                     className="track-library__item"
                                     onClick={() => onTrackSelect(track, tracks)}
+                                    onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        setContextMenuTrack(track);
+                                        setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+                                    }}
                                 >
                                     <span className="track-library__number">{index + 1}</span>
                                     <div className="track-library__icon">
@@ -286,6 +406,60 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                     )}
                 </div>
             )}
+
+            {/* Context Menu and Modals */}
+            <ContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                visible={contextMenu.visible}
+                onClose={() => setContextMenu({ ...contextMenu, visible: false })}
+                items={contextMenuPlaylist ? [
+                    {
+                        label: 'Open',
+                        icon: '📂',
+                        onClick: () => openPlaylist(contextMenuPlaylist)
+                    },
+                    {
+                        label: 'Rename',
+                        icon: '✏️',
+                        onClick: () => setShowRenameModal(true)
+                    },
+                    {
+                        label: 'Delete',
+                        icon: '🗑️',
+                        onClick: handleDeletePlaylist
+                    }
+                ] : [
+                    {
+                        label: 'Add to playlist...',
+                        icon: '➕',
+                        onClick: () => {
+                            setPlaylistModalMode('list');
+                            setShowPlaylistModal(true);
+                        }
+                    },
+                    {
+                        label: 'Play',
+                        icon: '▶️',
+                        onClick: () => contextMenuTrack && onTrackSelect(contextMenuTrack, tracks)
+                    }
+                ]}
+            />
+
+            <AddToPlaylistModal
+                isOpen={showPlaylistModal}
+                onClose={() => setShowPlaylistModal(false)}
+                track={contextMenuTrack ? { id: contextMenuTrack.id, title: contextMenuTrack.title, artist: contextMenuTrack.artist } : null}
+                initialMode={playlistModalMode}
+            />
+
+            <RenamePlaylistModal
+                isOpen={showRenameModal}
+                onClose={() => setShowRenameModal(false)}
+                playlist={contextMenuPlaylist}
+                onRenameSuccess={fetchData}
+                currentUserId={session.user?.id || 0}
+            />
         </div>
     );
 }

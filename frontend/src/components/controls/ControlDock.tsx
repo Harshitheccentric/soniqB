@@ -7,7 +7,9 @@ import { useState, useEffect } from 'react';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
 import { useSession } from '../../hooks/useSession';
 import { useSidebar } from '../../context/SidebarContext';
-import api from '../../api/musicApi';
+import { getLikedTrackIds, getPlaylists, removeTrackFromPlaylist, logEvent, getAlbumArtUrl } from '../../api/musicApi';
+import ContextMenu from '../common/ContextMenu';
+import AddToPlaylistModal from '../common/AddToPlaylistModal';
 import './ControlDock.css';
 
 // SVG Icons
@@ -66,6 +68,12 @@ export default function ControlDock() {
     const [likedTrackIds, setLikedTrackIds] = useState<number[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
 
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number }>({ visible: false, x: 0, y: 0 });
+    const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+    const [playlistModalMode, setPlaylistModalMode] = useState<'create' | 'list'>('create');
+
+
     // Load liked tracks on mount and when user changes
     useEffect(() => {
         if (session.user) {
@@ -75,7 +83,7 @@ export default function ControlDock() {
 
     const loadLikedTracks = async () => {
         try {
-            const ids = await api.getLikedTrackIds();
+            const ids = await getLikedTrackIds();
             setLikedTrackIds(ids);
         } catch (e) {
             console.error('Failed to load liked tracks:', e);
@@ -92,15 +100,15 @@ export default function ControlDock() {
         try {
             if (isCurrentTrackLiked) {
                 // UNLIKE: Find playlist and remove track
-                const playlists = await api.getPlaylists(session.user.id);
+                const playlists = await getPlaylists(session.user.id);
                 const likedPlaylist = playlists.find((p: any) => p.type === 'liked_songs');
                 if (likedPlaylist) {
-                    await api.removeTrackFromPlaylist(likedPlaylist.id, currentTrack.id);
+                    await removeTrackFromPlaylist(likedPlaylist.id, currentTrack.id);
                     setLikedTrackIds(prev => prev.filter(id => id !== currentTrack.id));
                 }
             } else {
                 // LIKE: Post event (backend auto-creates Liked Songs playlist)
-                await api.logEvent({
+                await logEvent({
                     user_id: session.user.id,
                     track_id: currentTrack.id,
                     event_type: 'like',
@@ -123,7 +131,16 @@ export default function ControlDock() {
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     return (
-        <div className={`control-dock ${sidebarOpen ? 'control-dock--sidebar-open' : 'control-dock--sidebar-closed'}`}>
+        <div
+            className={`control-dock ${sidebarOpen ? 'control-dock--sidebar-open' : 'control-dock--sidebar-closed'}`}
+            onContextMenu={(e) => {
+                // Only trigger if we have a current track
+                if (currentTrack) {
+                    e.preventDefault();
+                    setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+                }
+            }}
+        >
             <div className="control-dock__progress">
                 <div className="control-dock__progress-track">
                     <div className="control-dock__progress-fill" style={{ width: `${progress}%` }} />
@@ -143,7 +160,15 @@ export default function ControlDock() {
             <div className="control-dock__main">
                 <div className="control-dock__track">
                     <div className="control-dock__artwork">
-                        <span className="control-dock__artwork-icon">♪</span>
+                        {currentTrack ? (
+                            <img
+                                src={getAlbumArtUrl(currentTrack.id)}
+                                alt=""
+                                className="control-dock__artwork-img"
+                                onError={(e: any) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                            />
+                        ) : null}
+                        <span className="control-dock__artwork-icon" style={{ display: currentTrack ? 'none' : 'block' }}>♪</span>
                     </div>
                     <div className="control-dock__info">
                         {currentTrack ? (
@@ -195,6 +220,39 @@ export default function ControlDock() {
                     </div>
                 </div>
             </div>
+
+            {/* Context Menu and Modals */}
+            <ContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                visible={contextMenu.visible}
+                onClose={() => setContextMenu({ ...contextMenu, visible: false })}
+                items={[
+                    {
+                        label: 'Create new playlist',
+                        icon: '➕',
+                        onClick: () => {
+                            setPlaylistModalMode('create');
+                            setShowPlaylistModal(true);
+                        }
+                    },
+                    {
+                        label: 'Add to playlist...',
+                        icon: '🎵',
+                        onClick: () => {
+                            setPlaylistModalMode('list');
+                            setShowPlaylistModal(true);
+                        }
+                    }
+                ]}
+            />
+
+            <AddToPlaylistModal
+                isOpen={showPlaylistModal}
+                onClose={() => setShowPlaylistModal(false)}
+                track={currentTrack}
+                initialMode={playlistModalMode}
+            />
         </div>
     );
 }

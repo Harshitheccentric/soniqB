@@ -119,6 +119,7 @@ def seed_database():
         print("\n4. Creating playlists...")
         playlist1 = Playlist(
             user_id=users[0].id,
+            name="My Favorites",
             type="manual"
         )
         db.add(playlist1)

@@ -3,7 +3,11 @@
  * Visual representation with waveform visualization
  */
 
+import { useState } from 'react';
 import type { Track } from '../../types';
+import { getAlbumArtUrl } from '../../api/musicApi';
+import ContextMenu from '../common/ContextMenu';
+import AddToPlaylistModal from '../common/AddToPlaylistModal';
 import './ActiveTrackPanel.css';
 
 interface ActiveTrackPanelProps {
@@ -11,6 +15,11 @@ interface ActiveTrackPanelProps {
 }
 
 export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number }>({ visible: false, x: 0, y: 0 });
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [playlistModalMode, setPlaylistModalMode] = useState<'create' | 'list'>('create');
+
   if (!track) {
     return (
       <div className="active-track-panel active-track-panel--empty">
@@ -30,9 +39,21 @@ export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
   }
 
   return (
-    <div className="active-track-panel">
+    <div
+      className="active-track-panel"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+      }}
+    >
       <div className="active-track-panel__artwork">
-        <div className="active-track-panel__artwork-placeholder">
+        <img
+          src={getAlbumArtUrl(track.id)}
+          alt={track.title}
+          className="active-track-panel__artwork-img"
+          onError={(e: any) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+        />
+        <div className="active-track-panel__artwork-placeholder" style={{ display: 'none' }}>
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18V5l12-2v13" />
             <circle cx="6" cy="18" r="3" />
@@ -70,6 +91,39 @@ export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
           </div>
         )}
       </div>
+
+      {/* Context Menu and Modals */}
+      <ContextMenu
+        x={contextMenu.x}
+        y={contextMenu.y}
+        visible={contextMenu.visible}
+        onClose={() => setContextMenu({ ...contextMenu, visible: false })}
+        items={[
+          {
+            label: 'Create new playlist',
+            icon: '➕',
+            onClick: () => {
+              setPlaylistModalMode('create');
+              setShowPlaylistModal(true);
+            }
+          },
+          {
+            label: 'Add to playlist...',
+            icon: '🎵',
+            onClick: () => {
+              setPlaylistModalMode('list');
+              setShowPlaylistModal(true);
+            }
+          }
+        ]}
+      />
+
+      <AddToPlaylistModal
+        isOpen={showPlaylistModal}
+        onClose={() => setShowPlaylistModal(false)}
+        track={track}
+        initialMode={playlistModalMode}
+      />
     </div>
   );
 }

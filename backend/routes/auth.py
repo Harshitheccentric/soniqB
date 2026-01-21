@@ -3,6 +3,7 @@ Authentication endpoints for SoniqB.
 Handles user registration, login, and profile management.
 """
 from datetime import timedelta
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, validator
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 # Request/Response schemas
 class UserRegister(BaseModel):
     username: str
-    password: str
+    password: Optional[str] = None
     
     @validator('username')
     def username_valid(cls, v):
@@ -37,14 +38,14 @@ class UserRegister(BaseModel):
     
     @validator('password')
     def password_valid(cls, v):
-        if len(v) < 4:
+        if v and len(v) < 4:
             raise ValueError('Password must be at least 4 characters long')
         return v
 
 
 class UserLogin(BaseModel):
     username: str
-    password: str
+    password: Optional[str] = None
 
 
 class Token(BaseModel):
@@ -79,7 +80,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
         )
     
     # Create new user
-    hashed_password = get_password_hash(user_data.password)
+    hashed_password = get_password_hash(user_data.password) if user_data.password else None
     new_user = User(
         username=user_data.username,
         password_hash=hashed_password

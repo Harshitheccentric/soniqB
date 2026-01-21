@@ -4,7 +4,9 @@
  * Includes ML calibration (Phase 3) to "teach" the model genres
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { getTracks, getAudioUrl, logEvent, calibrateTrack, getLikedTrackIds, getPlaylists, removeTrackFromPlaylist } from '../api/musicApi';
+import { getTracks, getAudioUrl, logEvent, calibrateTrack, getLikedTrackIds, getPlaylists, removeTrackFromPlaylist, getAlbumArtUrl } from '../api/musicApi';
+import ContextMenu from './common/ContextMenu';
+import AddToPlaylistModal from './common/AddToPlaylistModal';
 
 function PlayerView({ user, selectedTrack }) {
     const [tracks, setTracks] = useState([]);
@@ -22,6 +24,12 @@ function PlayerView({ user, selectedTrack }) {
     const [calibrationGenre, setCalibrationGenre] = useState('');
     const [calibrating, setCalibrating] = useState(false);
 
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
+    const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+    const [playlistModalMode, setPlaylistModalMode] = useState('create');
+
+
     const audioRef = useRef(null);
 
     useEffect(() => {
@@ -34,7 +42,7 @@ function PlayerView({ user, selectedTrack }) {
         try {
             const trackIds = await getLikedTrackIds();
             setLikedTrackIds(new Set(trackIds));
-            
+
             // Also get the liked playlist ID for unlike functionality
             const playlists = await getPlaylists(user.id);
             const likedPlaylist = playlists.find(p => p.type === 'liked_songs');
@@ -173,7 +181,7 @@ function PlayerView({ user, selectedTrack }) {
     const handleLike = async () => {
         const newLikedState = !isLiked;
         setIsLiked(newLikedState);
-        
+
         if (newLikedState) {
             // Like: Add to liked tracks set and log event
             setLikedTrackIds(prev => new Set([...prev, currentTrack.id]));
@@ -185,7 +193,7 @@ function PlayerView({ user, selectedTrack }) {
                 newSet.delete(currentTrack.id);
                 return newSet;
             });
-            
+
             if (likedPlaylistId) {
                 try {
                     await removeTrackFromPlaylist(likedPlaylistId, currentTrack.id);
@@ -257,15 +265,22 @@ function PlayerView({ user, selectedTrack }) {
 
     return (
         <div className="player-view">
-            <div className="player-card">
+            <div
+                className="player-card"
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+                }}
+            >
                 <h2>Now Playing</h2>
 
                 {/* Track Metadata */}
                 <div className="track-info">
                     <img
-                        src="/album-placeholder.png"
+                        src={getAlbumArtUrl(currentTrack.id)}
                         alt="Album Art"
                         className="album-art"
+                        onError={(e) => { e.target.src = "/album-placeholder.png"; }}
                     />
                     <h3 className="track-title">{currentTrack.title}</h3>
                     <p className="track-artist">{currentTrack.artist}</p>
@@ -387,6 +402,39 @@ function PlayerView({ user, selectedTrack }) {
                     </p>
                 </div>
             </div>
+
+            {/* Context Menu and Modals */}
+            <ContextMenu
+                x={contextMenu.x}
+                y={contextMenu.y}
+                visible={contextMenu.visible}
+                onClose={() => setContextMenu({ ...contextMenu, visible: false })}
+                items={[
+                    {
+                        label: 'Create new playlist',
+                        icon: '➕',
+                        onClick: () => {
+                            setPlaylistModalMode('create');
+                            setShowPlaylistModal(true);
+                        }
+                    },
+                    {
+                        label: 'Add to playlist...',
+                        icon: '🎵',
+                        onClick: () => {
+                            setPlaylistModalMode('list');
+                            setShowPlaylistModal(true);
+                        }
+                    }
+                ]}
+            />
+
+            <AddToPlaylistModal
+                isOpen={showPlaylistModal}
+                onClose={() => setShowPlaylistModal(false)}
+                track={currentTrack}
+                initialMode={playlistModalMode}
+            />
         </div>
     );
 }

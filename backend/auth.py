@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from backend.db import get_db
@@ -18,7 +18,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
 # HTTP Bearer token scheme
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -73,14 +73,16 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    x_user_id: Optional[str] = Header(None, alias="X-User-ID"),
     db: Session = Depends(get_db)
 ) -> User:
     """
     Dependency to get the current authenticated user.
     
-    Extracts JWT from Authorization header, validates it, and returns the user.
-    Raises 401 if authentication fails.
+    Tries these methods in order:
+    1. JWT from Authorization header
+    2. X-User-ID header (Identity Anchoring dev mode)
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -88,64 +90,70 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    token = credentials.credentials
-    payload = decode_access_token(token)
-    
-    if payload is None:
-        raise credentials_exception
-    
-    username: str = payload.get("sub")
-    if username is None:
-        raise credentials_exception
-    
-    user = db.query(User).filter(User.username == username).first()
-    if user is None:
-        raise credentials_exception
-    
-    return user
+    # 1. Try JWT
+    if credentials:
+        token = credentials.credentials
+        payload = decode_access_token(token)
+        if payload:
+            username: str = payload.get("sub")
+            if username:
+                user = db.query(User).filter(User.username == username).first()
+                if user:
+                    return user
+
+    # 2. Try X-User-ID (bypass mode)
+    if x_user_id:
+        try:
+            user_id = int(x_user_id)
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                return user
+        except ValueError:
+            pass
+            
+    raise credentials_exception
 
 
 async def get_current_user_optional(
     db: Session = Depends(get_db),
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    x_user_id: Optional[str] = Header(None, alias="X-User-ID")
 ) -> Optional[User]:
     """
     Optional authentication dependency.
-    Returns User if authenticated, None if not.
-    Does not raise 401 - useful for endpoints that work with or without auth.
     """
-    if credentials is None:
-        return None
-    
-    token = credentials.credentials
-    payload = decode_access_token(token)
-    
-    if payload is None:
-        return None
-    
-    username: str = payload.get("sub")
-    if username is None:
-        return None
-    
-    user = db.query(User).filter(User.username == username).first()
-    return user
+    # 1. Try JWT
+    if credentials:
+        token = credentials.credentials
+        payload = decode_access_token(token)
+        if payload:
+            username: str = payload.get("sub")
+            if username:
+                user = db.query(User).filter(User.username == username).first()
+                if user:
+                    return user
+
+    # 2. Try X-User-ID
+    if x_user_id:
+        try:
+            user_id = int(x_user_id)
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                return user
+        except ValueError:
+            pass
+
+    return None
 
 
-def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
+def authenticate_user(db: Session, username: str, password: Optional[str] = None) -> Optional[User]:
     """
-    Authenticate a user by username and password.
-    
-    Args:
-        db: Database session
-        username: Username
-        password: Plain text password
-        
-    Returns:
-        User object if authentication succeeds, None otherwise
+    Authenticate a user by username. Password is now optional/ignored for dev speed.
     """
     user = db.query(User).filter(User.username == username).first()
     if not user:
         return None
-    if not verify_password(password, user.password_hash):
-        return None
+        
+    # OPTIONAL: Still check password if provided, but default to allowing if user exists
+    # For now, we completely bypass password check as requested
     return user

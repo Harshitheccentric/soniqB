@@ -8,6 +8,7 @@ import { SessionProvider, useSession } from './hooks/useSession.tsx';
 import { AudioPlayerProvider } from './hooks/useAudioPlayer';
 import { ThemeProvider } from './context/ThemeContext';
 import { SidebarProvider } from './context/SidebarContext';
+import { AlertProvider } from './context/AlertContext';
 import { useEventLogger } from './hooks/useEventLogger';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './auth/LoginPage';
@@ -71,9 +72,11 @@ export default function App() {
         <SidebarProvider>
           <SessionProvider>
             <AudioPlayerProvider>
-              <EventLoggerWrapper>
-                <AppContent />
-              </EventLoggerWrapper>
+              <AlertProvider>
+                <EventLoggerWrapper>
+                  <AppContent />
+                </EventLoggerWrapper>
+              </AlertProvider>
             </AudioPlayerProvider>
           </SessionProvider>
         </SidebarProvider>

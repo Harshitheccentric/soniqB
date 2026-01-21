@@ -116,15 +116,54 @@ def stream_audio(track_id: int, request: Request, db: Session = Depends(get_db))
     )
 
 
+@router.get("/tracks/{track_id}/art")
+def get_track_art(track_id: int, db: Session = Depends(get_db)):
+    """Get album art for a track."""
+    track = db.query(Track).filter(Track.id == track_id).first()
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+    
+    if not os.path.exists(track.audio_path):
+        raise HTTPException(status_code=404, detail="Audio file not found")
+        
+    # Look for image files in the same directory
+    track_dir = os.path.dirname(track.audio_path)
+    
+    # Common cover filenames
+    cover_names = ["cover.jpg", "cover.png", "cover.jpeg", "folder.jpg", "folder.png", "front.jpg"]
+    
+    # First check for specific filenames
+    for name in cover_names:
+        art_path = os.path.join(track_dir, name)
+        if os.path.exists(art_path):
+            return FileResponse(art_path)
+            
+    # Fallback: check any image file
+    valid_exts = {'.jpg', '.jpeg', '.png', '.webp'}
+    try:
+        for file in os.listdir(track_dir):
+            if os.path.splitext(file)[1].lower() in valid_exts:
+                # Avoid returning the placeholder itself if it somehow got there
+                return FileResponse(os.path.join(track_dir, file))
+    except OSError:
+        pass
+        
+    raise HTTPException(status_code=404, detail="Album art not found")
+
+
 @router.post("/tracks/scan")
 def scan_library(db: Session = Depends(get_db)):
     """
     Scan audio directory for new files and add them to database.
     Does not delete missing files to preserve history.
     """
-    audio_dir = "backend/storage/audio"
+    audio_dir = "backend/storage/tracks"
     if not os.path.exists(audio_dir):
-        return {"scanned": 0, "added": 0, "error": "Audio directory not found"}
+        # Fallback to creating it
+        try:
+            os.makedirs(audio_dir)
+        except OSError:
+            return {"scanned": 0, "added": 0, "error": "Audio directory not found"}
         
     added = 0
     scanned = 0
@@ -247,8 +286,28 @@ async def upload_track(
         from backend.ml.genre_classifier import get_genre_classifier
         classifier = get_genre_classifier()
         genre, confidence = classifier.classify_audio_file(str(file_path))
+        
+        # Move file to genre folder if classified
+        if genre:
+            genre_dir = Path("backend/storage/tracks") / genre
+            genre_dir.mkdir(parents=True, exist_ok=True)
+            
+            new_path = genre_dir / file_path.name
+            
+            # handle duplicates in genre folder
+            counter = 1
+            while new_path.exists():
+                stem = file_path.stem
+                new_path = genre_dir / f"{stem}_{counter}{file_ext}"
+                counter += 1
+                
+            # Move file
+            import shutil
+            shutil.move(str(file_path), str(new_path))
+            file_path = new_path
+            
     except Exception as e:
-        print(f"Warning: Genre classification failed: {e}")
+        print(f"Warning: Genre classification/move failed: {e}")
         # Continue without genre - not critical
     
     # Create track record

@@ -230,3 +230,47 @@ def add_track_to_playlist(
     db.commit()
     
     return {"message": "Track added to playlist"}
+
+
+@router.delete("/{playlist_id}", status_code=204)
+def delete_playlist(
+    playlist_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a playlist."""
+    playlist = db.query(Playlist).filter(Playlist.id == playlist_id).first()
+    
+    if not playlist:
+        raise HTTPException(status_code=404, detail="Playlist not found")
+    
+    if playlist.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only delete your own playlists")
+        
+    # Delete associated entries
+    db.query(PlaylistTrack).filter(PlaylistTrack.playlist_id == playlist_id).delete()
+    db.delete(playlist)
+    db.commit()
+    return None
+
+
+@router.put("/{playlist_id}", response_model=PlaylistResponse)
+def update_playlist(
+    playlist_id: int,
+    playlist_update: PlaylistCreate, # Reusing schema for name
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Rename a playlist."""
+    playlist = db.query(Playlist).filter(Playlist.id == playlist_id).first()
+    
+    if not playlist:
+        raise HTTPException(status_code=404, detail="Playlist not found")
+        
+    if playlist.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only rename your own playlists")
+        
+    playlist.name = playlist_update.name
+    db.commit()
+    db.refresh(playlist)
+    return playlist

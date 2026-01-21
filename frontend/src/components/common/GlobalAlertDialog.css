@@ -1,0 +1,121 @@
+/* Reset/Base Styles */
+button {
+    all: unset;
+}
+
+.AlertDialogOverlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    position: fixed;
+    inset: 0;
+    animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10001;
+    /* Above context menu */
+    backdrop-filter: blur(4px);
+}
+
+.AlertDialogContent {
+    background-color: #282828;
+    border-radius: 12px;
+    border: 1px solid #3e3e3e;
+    box-shadow: 0 10px 38px -10px rgba(0, 0, 0, 0.35),
+        0 10px 20px -15px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 450px;
+    max-height: 85vh;
+    padding: 25px;
+    animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10002;
+}
+
+.AlertDialogContent:focus {
+    outline: none;
+}
+
+.AlertDialogTitle {
+    margin: 0;
+    color: #fff;
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.AlertDialogDescription {
+    margin-bottom: 20px;
+    color: #b3b3b3;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+.Button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    padding: 0 15px;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 500;
+    height: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.Button.violet {
+    background-color: white;
+    color: black;
+    font-weight: 600;
+}
+
+.Button.violet:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.02);
+}
+
+.Button.mauve {
+    background-color: transparent;
+    color: #b3b3b3;
+    border: 1px solid #333;
+}
+
+.Button.mauve:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: #666;
+}
+
+.Button.red {
+    background-color: rgba(233, 20, 41, 0.15);
+    color: #e91429;
+    border: 1px solid transparent;
+}
+
+.Button.red:hover {
+    background-color: rgba(233, 20, 41, 0.25);
+    border-color: #e91429;
+}
+
+@keyframes overlayShow {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes contentShow {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}

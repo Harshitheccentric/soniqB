@@ -1,0 +1,75 @@
+.dock-outer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    /* Let clicks pass through empty space if needed, but inner panel catches */
+    z-index: 50;
+}
+
+.dock-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 0;
+    background: rgba(40, 40, 40, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    pointer-events: auto;
+    transform-origin: left center;
+}
+
+.dock-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(60, 60, 60, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+    color: #fff;
+}
+
+.dock-item:hover {
+    background: rgba(100, 100, 100, 0.9);
+}
+
+.dock-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dock-icon svg {
+    width: 50%;
+    height: 50%;
+}
+
+.dock-label {
+    position: absolute;
+    left: 100%;
+    margin-left: 10px;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    pointer-events: none;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}

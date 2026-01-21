@@ -268,7 +268,7 @@ body {
 
 .track-artist {
   font-size: 0.8rem;
-  color: #b3b3b3;
+  color: #1db954;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -476,7 +476,7 @@ body {
 
 .track-artist {
   font-size: 1.1rem;
-  color: #b3b3b3;
+  color: #1db954;
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
