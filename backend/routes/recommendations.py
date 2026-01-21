@@ -26,6 +26,7 @@ def load_recommender():
 def get_next_track(
     current_track_id: int,
     history_limit: int = 50,
+    skipped_track_ids: Optional[List[int]] = Query(None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
@@ -50,8 +51,11 @@ def get_next_track(
     next_id = recommender.recommend_next_track(
         current_track_id=current_track_id,
         history_ids=list(history_ids)
+        # Note: skipped_ids not yet fully used in recommender signature in current iteration
+        # but passed here for future proofing / if we update signature
     )
     
+    # Fallback if next_id is None
     if next_id:
         track = db.query(Track).filter(Track.id == next_id).first()
         if track:

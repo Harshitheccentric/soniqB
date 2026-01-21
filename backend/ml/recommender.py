@@ -96,20 +96,39 @@ class TrackRecommender:
             Recommended track ID or None
         """
         if not self._is_fitted or self._model is None:
+            # Cold Start Fallback: If not fitted or empty, return random from DB?
+            # Ideally handled by caller, but here return None
             return None
             
+        # --- Cold Start Strategy ---
+        if len(history_ids) < 5:
+            # User is new (Cold Start). 
+            # Strategy: Sample from pre-computed Global KMeans centroids (simulated here)
+            # We pick a random "Cluster" to start them off in.
+            import random
+            random_idx = random.randint(0, len(self._track_ids) - 1)
+            # Return a random track to seed their taste
+            return self._track_ids[random_idx]
+
         # Find index of current track
         try:
             query_idx = self._track_ids.index(current_track_id)
         except ValueError:
-            # Track not in our embedding index
             return None
             
         # Get embedding
         query_emb = self._embeddings[query_idx].reshape(1, -1)
         
-        # Find neighbors
-        distances, indices = self._model.kneighbors(query_emb, n_neighbors=self.n_neighbors + len(history_ids))
+        # --- Skip Signal Penalty ---
+        # If we passed skipped_ids, we temporarily adjust the query vector
+        # pushing it AWAY from the skipped tracks' centroid.
+        # For simplicity in this demo (stateless), we'll do this if skipped_ids is added later.
+        # Since the signature assumes stateless, we'll keep it simple: 
+        # Just use standard similarity but filter aggressively.
+        
+        # Find neighbors (fetch more to allow for exploration reranking)
+        # Fetch 20 candidates
+        distances, indices = self._model.kneighbors(query_emb, n_neighbors=20 + len(history_ids))
         
         # Filter candidates
         candidates = []
@@ -120,14 +139,27 @@ class TrackRecommender:
             if tid in history_ids:
                 continue
             candidates.append(tid)
-            if len(candidates) >= top_k:
-                break
         
         if not candidates:
             return None
             
-        # Pick one from top K (weighted by closeness? or just closest?)
-        # Let's pick the absolute closest for "Radio" continuity
+        # --- Probabilistic Reranking (Exploration vs Exploitation) ---
+        import random
+        
+        # 20% Chance to Explore (pick from rank 5-15)
+        # 80% Chance to Exploit (pick from rank 0-4)
+        
+        if len(candidates) >= 10 and random.random() < 0.2:
+            # Exploration Mode
+            # Pick a random track from the "Next Best" tier
+            # ranks 5 to 15 (or end of list)
+            start = 5
+            end = min(15, len(candidates))
+            if start < end:
+                return candidates[random.randint(start, end - 1)]
+        
+        # Exploitation Mode (Default)
+        # Pick the absolute best match
         return candidates[0]
     
     def generate_playlist(

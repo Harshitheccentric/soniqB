@@ -6,6 +6,13 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import axios from 'axios';
 import './Analysis.css';
+import { useSession } from '../hooks/useSession';
+
+interface Attribution {
+    feature: string;
+    score: number;
+    impact: string;
+}
 
 interface UserProfile {
     archetype: string;
@@ -17,6 +24,7 @@ interface UserProfile {
         genre_diversity: number;
     };
     explanation: string;
+    attribution?: Attribution[];
 }
 
 interface MapPoint {
@@ -27,8 +35,6 @@ interface MapPoint {
     x: number;
     y: number;
 }
-
-import { useSession } from '../hooks/useSession';
 
 export default function Analysis() {
     const { session } = useSession();
@@ -56,7 +62,13 @@ export default function Analysis() {
             }
         };
         fetchData();
-    }, []);
+    }, [session.user?.id]);
+
+    const handleMapClick = (trackId: number) => {
+        console.log("Playing track from Galaxy:", trackId);
+        // Dispatch event for Home.tsx to catch
+        window.dispatchEvent(new CustomEvent('playTrack', { detail: { trackId } }));
+    };
 
     if (loading) return <div className="analysis-page loading">Loading Insights...</div>;
     if (!profile) return <div className="analysis-page error">Failed to load analysis data.</div>;
@@ -82,6 +94,21 @@ export default function Analysis() {
                     </div>
                     <h2>{profile.archetype}</h2>
                     <p className="archetype-desc">{profile.description}</p>
+
+                    {/* Attribution "Why?" Section */}
+                    {profile.attribution && (
+                        <div className="attribution-section">
+                            <h4>Why?</h4>
+                            <div className="attribution-tags">
+                                {profile.attribution.map((attr, i) => (
+                                    <span key={i} className="attr-tag" title={`Z-Score: ${attr.score}`}>
+                                        {attr.impact}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="archetype-stats">
                         <div className="stat">
                             <span className="label">Total Plays</span>
@@ -94,7 +121,7 @@ export default function Analysis() {
                     </div>
                 </motion.div>
 
-                {/* Library Map (Simplified Scatter) */}
+                {/* Library Map */}
                 <motion.div
                     className="analysis-card map-card"
                     initial={{ opacity: 0, y: 20 }}
@@ -102,6 +129,7 @@ export default function Analysis() {
                     transition={{ delay: 0.1 }}
                 >
                     <h3>Library Galaxy</h3>
+                    <p className="subtitle">Click a star to play</p>
                     <div className="map-container">
                         {(mapData || []).slice(0, 100).map((point, i) => (
                             <motion.div
@@ -114,8 +142,10 @@ export default function Analysis() {
                                 }}
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
+                                whileHover={{ scale: 2.5, zIndex: 100 }}
                                 transition={{ delay: i * 0.005 }}
                                 title={`${point.title} - ${point.artist}`}
+                                onClick={() => handleMapClick(point.id)}
                             />
                         ))}
                     </div>

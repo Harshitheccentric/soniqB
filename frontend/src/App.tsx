@@ -5,7 +5,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SessionProvider, useSession } from './hooks/useSession.tsx';
-import { AudioPlayerProvider } from './hooks/useAudioPlayer';
+import { AudioPlayerProvider } from './context/AudioPlayerContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SidebarProvider } from './context/SidebarContext';
 import { AlertProvider } from './context/AlertContext';

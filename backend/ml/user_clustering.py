@@ -168,18 +168,85 @@ class UserClusterAnalyzer:
         self._is_fitted = True
         logger.info(f"User clustering fitted with {self.n_clusters} clusters")
     
+        return (label, info)
+
+    def _calculate_attribution(self, user_vector: np.ndarray) -> List[Dict]:
+        """
+        Calculate feature attribution using Z-scores.
+        Returns top 3 features that deviate most from the mean.
+        """
+        # Estimated population stats (Mean, StdDev) - derived from typical usage
+        # In a real system, these would be updated dynamically or loaded from DB stats
+        POPULATION_STATS = {
+            # Idx 0: Total Plays
+            0: (50.0, 30.0),
+            # Idx 1: Avg Duration (sec)
+            1: (180.0, 60.0),
+            # Idx 2: Like Ratio (0-1)
+            2: (0.1, 0.15),
+            # Idx 3: Skip Ratio (0-1)
+            3: (0.3, 0.2),
+            # Idx 4: Genre Diversity (count)
+            4: (5.0, 3.0),
+            # Idx 5: Session Freq (per day)
+            5: (1.0, 2.0)
+        }
+        
+        FEATURE_NAMES = [
+            "Total Plays", "Avg Duration", "Like Ratio", "Skip Ratio", "Genre Diversity", "Session Frequency"
+        ]
+        
+        z_scores = []
+        for i, val in enumerate(user_vector):
+            mean, std = POPULATION_STATS[i]
+            z = (val - mean) / (std + 1e-5) # Avoid div bu zero
+            z_scores.append({
+                "feature_index": i,
+                "feature": FEATURE_NAMES[i],
+                "score": z,
+                "value": val,
+                "abs_score": abs(z)
+            })
+            
+        # Sort by absolute deviation
+        z_scores.sort(key=lambda x: x['abs_score'], reverse=True)
+        
+        # Take top 3
+        top_features = z_scores[:3]
+        
+        # Add impact description
+        attributions = []
+        for item in top_features:
+            score = item['score']
+            feature = item['feature']
+            if score > 0.5:
+                if feature == "Skip Ratio": impact = "High Discovery Rate"
+                elif feature == "Genre Diversity": impact = "Eclectic Taste"
+                elif feature == "Total Plays": impact = "Heavy Listener"
+                elif feature == "Avg Duration": impact = "Deep Focus"
+                elif feature == "Like Ratio": impact = "Curator"
+                else: impact = f"High {feature}"
+            elif score < -0.5:
+                if feature == "Skip Ratio": impact = "Patient Listener"
+                elif feature == "Genre Diversity": impact = "Focused Taste"
+                else: impact = f"Low {feature}"
+            else:
+                impact = "Average"
+                
+            attributions.append({
+                "feature": feature,
+                "score": round(score, 2),
+                "impact": impact
+            })
+            
+        return attributions
+
     def predict(
         self, 
         user_vector: np.ndarray
     ) -> Tuple[str, Dict]:
         """
-        Predict cluster for a user.
-        
-        Args:
-            user_vector: Feature vector of shape (6,)
-            
-        Returns:
-            Tuple of (cluster_label, cluster_info_dict)
+        Predict cluster for a user with attribution.
         """
         if not self._is_fitted:
             # Use heuristic classification if not fitted
@@ -196,12 +263,16 @@ class UserClusterAnalyzer:
             label = self._cluster_labels[cluster_id]
         else:
             label = f"Cluster_{cluster_id}"
+            
+        # Get Attribution
+        attribution = self._calculate_attribution(user_vector)
         
         # Build info dict
         info = {
             "cluster_id": int(cluster_id),
             "label": label,
             "description": CLUSTER_DESCRIPTIONS.get(label, ""),
+            "attribution": attribution,
             "features": {
                 "total_plays": float(user_vector[0]),
                 "avg_duration": float(user_vector[1]),
