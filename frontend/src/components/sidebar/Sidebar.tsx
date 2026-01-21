@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSession } from '../../hooks/useSession';
 import VerticalDock from '../common/VerticalDock';
 import {
@@ -12,38 +12,47 @@ import {
 } from 'react-icons/vsc';
 import './Sidebar.css';
 
-export default function Sidebar() {
+// Define types for Home views
+export type ViewType = 'nowPlaying' | 'metrics' | 'analysis' | 'playlists';
+
+interface SidebarProps {
+    activeView: ViewType;
+    onViewChange: (view: ViewType) => void;
+    onUploadClick: () => void;
+}
+
+export default function Sidebar({ activeView, onViewChange, onUploadClick }: SidebarProps) {
     const navigate = useNavigate();
-    const location = useLocation();
     const { session, clearSession } = useSession();
 
-    // Helper to determine if a route is active
-    const isActive = (path: string) => location.pathname === path;
+    // Helper to determine active state (either via prop or route)
+    // We prioritize the prop for the SPA-like Home views
+    const isItemActive = (viewName: ViewType) => activeView === viewName;
 
     const items = [
         {
             icon: <VscHome />,
             label: 'Home',
-            onClick: () => navigate('/home'),
-            className: isActive('/home') ? 'dock-item--active' : ''
+            onClick: () => onViewChange('nowPlaying'),
+            className: isItemActive('nowPlaying') ? 'dock-item--active' : ''
         },
         {
             icon: <VscGraph />,
             label: 'Analysis',
-            onClick: () => navigate('/analysis'),
-            className: isActive('/analysis') ? 'dock-item--active' : ''
+            onClick: () => onViewChange('analysis'),
+            className: isItemActive('analysis') ? 'dock-item--active' : ''
         },
         {
             icon: <VscLibrary />,
             label: 'Library',
-            onClick: () => navigate('/library'),
-            className: isActive('/library') ? 'dock-item--active' : ''
+            onClick: () => onViewChange('playlists'),
+            className: isItemActive('playlists') ? 'dock-item--active' : ''
         },
         {
             icon: <VscCloudUpload />,
             label: 'Upload',
-            onClick: () => navigate('/upload'),
-            className: isActive('/upload') ? 'dock-item--active' : ''
+            onClick: onUploadClick,
+            className: ''
         },
     ];
 
@@ -52,8 +61,8 @@ export default function Sidebar() {
         items.push({
             icon: <VscAccount />,
             label: 'Profile',
-            onClick: () => navigate('/profile'),
-            className: isActive('/profile') ? 'dock-item--active' : ''
+            onClick: () => onViewChange('metrics'),
+            className: isItemActive('metrics') ? 'dock-item--active' : ''
         });
         items.push({
             icon: <VscSignOut />,
@@ -69,7 +78,7 @@ export default function Sidebar() {
             icon: <VscSignIn />,
             label: 'Login',
             onClick: () => navigate('/login'),
-            className: isActive('/login') ? 'dock-item--active' : ''
+            className: '' // Login doesn't map to a ViewType easily unless we add it
         });
     }
 

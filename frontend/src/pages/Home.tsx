@@ -13,6 +13,7 @@ import InteractiveBackground from '../components/background/InteractiveBackgroun
 import ActiveTrackPanel from '../components/track/ActiveTrackPanel';
 import MetricsPanel from '../components/metrics/MetricsPanel';
 import TrackLibrary from '../components/library/TrackLibrary';
+import Analysis from '../pages/Analysis';
 import ControlDock from '../components/controls/ControlDock';
 import UploadSong from '../components/UploadSong';
 import type { Track } from '../types';
@@ -54,6 +55,8 @@ export default function Home() {
         return <ActiveTrackPanel track={currentTrack} />;
       case 'metrics':
         return <MetricsPanel userId={session.user!.id} />;
+      case 'analysis':
+        return <Analysis />;
       case 'playlists':
         return <TrackLibrary onTrackSelect={handleTrackSelect} />;
       default:

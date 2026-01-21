@@ -90,10 +90,11 @@ export function AudioPlayerProvider({
   };
 
   // Skip to next track
-  const skip = () => {
+  const skip = async () => {
     const nextIndex = state.queueIndex + 1;
 
     if (nextIndex < state.queue.length) {
+      // Normal skip
       setState(prev => ({
         ...prev,
         queueIndex: nextIndex,
@@ -103,7 +104,30 @@ export function AudioPlayerProvider({
       }));
       onSkipCallback?.();
     } else {
-      // End of queue
+      // End of queue - Fetch Recommendation
+      try {
+        if (state.currentTrack) {
+          const { data: nextTrack } = await import('axios').then(m => m.default.get(`/api/recommendations/next?current_track_id=${state.currentTrack!.id}`));
+
+          if (nextTrack) {
+            console.log("Auto-playing recommendation:", nextTrack.title);
+            // Add to queue and play
+            setState(prev => ({
+              ...prev,
+              queue: [...prev.queue, nextTrack],
+              queueIndex: nextIndex,
+              currentTrack: nextTrack,
+              isPlaying: true,
+              currentTime: 0
+            }));
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch recommendation:", err);
+      }
+
+      // Fallback if no recommendation or error
       pause();
     }
   };
