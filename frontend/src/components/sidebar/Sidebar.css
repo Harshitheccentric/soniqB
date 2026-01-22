@@ -7,8 +7,7 @@
     /* ensure it stays on top/left */
     position: relative;
     z-index: 50;
-    pointer-events: none;
-    /* Let clicks pass through container, dock-outer handles its own */
+    /* Removed pointer-events: none to allow sidebar button clicks */
 }
 
 /* Active State for Dock Item */

@@ -47,7 +47,7 @@ function DockItem({ children, className = '', onClick, mouseY, spring, distance,
             role="button"
             aria-haspopup="true"
         >
-            {Children.map(children, child => cloneElement(child as React.ReactElement, { isHovered }))}
+            {Children.map(children, child => cloneElement(child as React.ReactElement<any>, { isHovered }))}
         </motion.div>
     );
 }
@@ -206,16 +206,12 @@ export default function VerticalDock({
     };
 
     const handleItemClick = (e: React.MouseEvent, originalClick?: () => void) => {
-        // ALWAYS execute the navigation logic first
+        // ALWAYS execute the navigation logic first - don't catch errors here
         if (originalClick) {
-            try {
-                originalClick();
-            } catch (err) {
-                console.error("Navigation error:", err);
-            }
+            originalClick();
         }
 
-        // Then do visuals
+        // Then do visuals - catch errors only for particle animation
         try {
             const target = e.currentTarget as HTMLElement;
             spawnParticles(target);
