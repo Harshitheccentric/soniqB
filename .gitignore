@@ -62,4 +62,5 @@ backend/fma/fma_small/
 
 # ML Model data and weights (large binary files)
 backend/storage
-backend/ml/data/
+backend/ml/data
+backend/ml-old

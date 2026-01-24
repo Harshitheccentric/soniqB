@@ -236,4 +236,13 @@ export const calibrateTrack = async (trackId, genre) => {
     return response.data;
 };
 
+// Recommendation API calls
+export const generatePersonalizedPlaylist = async (playlistName = null, nTracks = 20) => {
+    const response = await api.post('/recommendations/playlist/personalized', {
+        playlist_name: playlistName,
+        n_tracks: nTracks
+    });
+    return response.data;
+};
+
 export default api;

@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from '../../hooks/useSession';
 import type { Track } from '../../types';
 import { useAlert } from '../../context/AlertContext';
-import { deletePlaylist } from '../../api/musicApi';
+import { deletePlaylist, generatePersonalizedPlaylist } from '../../api/musicApi';
 import ContextMenu from '../common/ContextMenu';
 import AddToPlaylistModal from '../common/AddToPlaylistModal';
 import RenamePlaylistModal from '../common/RenamePlaylistModal';
@@ -47,6 +47,7 @@ const getPlaylistIcon = (type: string) => {
         case 'liked_songs': return '💖';
         case 'uploaded_songs': return '🎵';
         case 'manual': return '📋';
+        case 'auto_generated': return '✨';
         default: return '🎶';
     }
 };
@@ -56,6 +57,7 @@ const getPlaylistTypeName = (type: string) => {
         case 'liked_songs': return 'Liked';
         case 'uploaded_songs': return 'Uploaded';
         case 'manual': return 'Manual';
+        case 'auto_generated': return 'AI Generated';
         default: return type;
     }
 };
@@ -71,6 +73,7 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
     const [loadingPlaylist, setLoadingPlaylist] = useState(false);
     const [classifying, setClassifying] = useState(false);
     const [classificationResult, setClassificationResult] = useState<{ classified: number, total: number } | null>(null);
+    const [generating, setGenerating] = useState(false);
 
     // Context Menu State
     const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number }>({ visible: false, x: 0, y: 0 });
@@ -245,6 +248,41 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
         }
     };
 
+    const handleGeneratePersonalizedPlaylist = async () => {
+        setGenerating(true);
+        try {
+            const result = await generatePersonalizedPlaylist();
+
+            // Show success alert
+            showAlert({
+                title: 'Playlist Created! 🎉',
+                description: `Created "${result.name}" with ${result.track_count} tracks based on your listening history.`
+            });
+
+            // Refresh playlists to show new one
+            await fetchData();
+
+            // Auto-open the new playlist
+            const newPlaylist: Playlist = {
+                id: result.id,
+                name: result.name,
+                type: result.type,
+                user_id: session.user!.id
+            };
+            openPlaylist(newPlaylist);
+
+        } catch (err: any) {
+            console.error('Failed to generate playlist:', err);
+            const errorMsg = err.response?.data?.detail || 'Failed to generate personalized playlist. Please try again.';
+            showAlert({
+                title: 'Error',
+                description: errorMsg
+            });
+        } finally {
+            setGenerating(false);
+        }
+    };
+
 
     const handleDeletePlaylist = async () => {
         if (!contextMenuPlaylist) return;
@@ -279,25 +317,46 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
     // Main Library View
     return (
         <div className="track-library">
-            <div className="track-library__header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div className="track-library__header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', gap: '1rem' }}>
                 <h2 className="track-library__title" style={{ margin: 0 }}>📚 Your Library</h2>
-                <button
-                    className="track-library__action-btn"
-                    onClick={handleClassifyLibrary}
-                    disabled={classifying}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        background: classifying ? '#666' : '#1db954',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '20px',
-                        cursor: classifying ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem'
-                    }}
-                >
-                    {classifying ? '✨ Classifying...' : '✨ Classify Library'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                        className="track-library__action-btn"
+                        onClick={handleGeneratePersonalizedPlaylist}
+                        disabled={generating}
+                        style={{
+                            padding: '0.5rem 1.25rem',
+                            background: generating ? '#666' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '20px',
+                            cursor: generating ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            boxShadow: generating ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        {generating ? '✨ Generating...' : '🎵 Generate My Playlist'}
+                    </button>
+                    <button
+                        className="track-library__action-btn"
+                        onClick={handleClassifyLibrary}
+                        disabled={classifying}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            background: classifying ? '#666' : '#1db954',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '20px',
+                            cursor: classifying ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem'
+                        }}
+                    >
+                        {classifying ? '✨ Classifying...' : '✨ Classify Library'}
+                    </button>
+                </div>
             </div>
 
             {classificationResult && (

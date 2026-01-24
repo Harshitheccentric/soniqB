@@ -151,7 +151,7 @@
 
 .login-form__submit {
   width: 100%;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-md);
   font-size: var(--font-size-md);
   font-weight: 600;
   color: white;

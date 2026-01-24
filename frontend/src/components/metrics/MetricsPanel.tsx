@@ -1,11 +1,7 @@
-/**
- * MetricsPanel Component
- * Listening statistics and analytics
- */
-
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { Event } from '../../types';
+import { getEvents } from '../../api/musicApi';
 import Surface from '../common/Surface';
 import './MetricsPanel.css';
 
@@ -23,16 +19,7 @@ export default function MetricsPanel({ userId }: MetricsPanelProps) {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/events/user/${userId}`);
-
-      if (!response.ok) {
-        // Handle non-200 responses gracefully
-        console.warn(`Failed to fetch events: ${response.status}`);
-        setEvents([]);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await getEvents(userId);
       setEvents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch events:', error);

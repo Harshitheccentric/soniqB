@@ -112,3 +112,144 @@ def generate_playlist(
     db.commit()
     
     return {"id": playlist.id, "name": playlist.name, "track_count": len(recs)}
+
+
+@router.post("/playlist/personalized")
+def generate_personalized_playlist(
+    playlist_name: Optional[str] = Body(None),
+    n_tracks: int = Body(20),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """
+    Generate a personalized playlist for the user based on their listening history.
+    
+    Algorithm:
+    1. Analyze user's top played/liked tracks
+    2. Select diverse seed tracks from user's favorites
+    3. Use recommender to expand into full playlist
+    4. Filter out recently played tracks
+    5. Create playlist with auto-generated name
+    """
+    # Get user's listening events
+    events = db.query(ListeningEvent)\
+        .filter(ListeningEvent.user_id == user.id)\
+        .all()
+    
+    if not events:
+        raise HTTPException(
+            status_code=400, 
+            detail="No listening history found. Play some tracks first!"
+        )
+    
+    # Find liked tracks
+    liked_track_ids = [e.track_id for e in events if e.event_type == 'like']
+    
+    # Count play events per track
+    play_counts = {}
+    for e in events:
+        if e.event_type == 'play':
+            play_counts[e.track_id] = play_counts.get(e.track_id, 0) + 1
+    
+    # Get top played tracks
+    top_played = sorted(play_counts.items(), key=lambda x: x[1], reverse=True)
+    top_played_ids = [tid for tid, _ in top_played[:10]]
+    
+    # Combine liked and top played for seed selection
+    seed_candidates = set(liked_track_ids + top_played_ids)
+    
+    # Select up to 5 diverse seeds
+    seed_tracks = list(seed_candidates)[:5]
+    
+    if not seed_tracks:
+        # Fallback: use random tracks from library
+        random_tracks = db.query(Track).limit(5).all()
+        seed_tracks = [t.id for t in random_tracks]
+    
+    # Generate playlist using recommender
+    recommender = get_recommender()
+    
+    # Get recently played tracks to exclude
+    recent_events = db.query(ListeningEvent)\
+        .filter(ListeningEvent.user_id == user.id)\
+        .filter(ListeningEvent.event_type == 'play')\
+        .order_by(ListeningEvent.timestamp.desc())\
+        .limit(20)\
+        .all()
+    recent_ids = [e.track_id for e in recent_events]
+    
+    # Generate recommendations
+    recommended_ids = recommender.generate_playlist(
+        seed_track_ids=seed_tracks,
+        n_tracks=n_tracks,
+        exclude_ids=recent_ids
+    )
+    
+    # Fallback if recommender is not fitted or returns empty
+    if not recommended_ids:
+        # Use genre-based fallback
+        # Get genres from seed tracks
+        seed_track_objs = db.query(Track).filter(Track.id.in_(seed_tracks)).all()
+        seed_genres = [t.predicted_genre for t in seed_track_objs if t.predicted_genre]
+        
+        if seed_genres:
+            # Find tracks with similar genres
+            recommended_ids = []
+            for genre in set(seed_genres):
+                similar_tracks = db.query(Track)\
+                    .filter(Track.predicted_genre == genre)\
+                    .filter(Track.id.notin_(seed_tracks + recent_ids))\
+                    .limit(n_tracks // len(set(seed_genres)) + 1)\
+                    .all()
+                recommended_ids.extend([t.id for t in similar_tracks])
+            
+            # Trim to requested size
+            recommended_ids = recommended_ids[:n_tracks]
+        
+        # If still empty, just use random tracks
+        if not recommended_ids:
+            all_tracks = db.query(Track)\
+                .filter(Track.id.notin_(seed_tracks + recent_ids))\
+                .limit(n_tracks)\
+                .all()
+            recommended_ids = [t.id for t in all_tracks]
+    
+    if not recommended_ids:
+        raise HTTPException(
+            status_code=400, 
+            detail="Could not generate playlist. Try playing more tracks to build your profile."
+        )
+    
+    # Create playlist name if not provided
+    if not playlist_name:
+        from datetime import datetime
+        playlist_name = f"My Mix - {datetime.now().strftime('%b %d')}"
+    
+    # Create playlist in database
+    playlist = Playlist(
+        user_id=user.id,
+        name=playlist_name,
+        type="auto_generated"
+    )
+    db.add(playlist)
+    db.commit()
+    db.refresh(playlist)
+    
+    # Add tracks to playlist
+    for idx, track_id in enumerate(recommended_ids):
+        pt = PlaylistTrack(
+            playlist_id=playlist.id,
+            track_id=track_id,
+            position=idx
+        )
+        db.add(pt)
+    
+    db.commit()
+    
+    return {
+        "id": playlist.id,
+        "name": playlist.name,
+        "type": "auto_generated",
+        "track_count": len(recommended_ids),
+        "seed_tracks": seed_tracks
+    }
