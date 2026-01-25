@@ -16,39 +16,64 @@
     height: 100% !important;
 }
 
+.sonic-universe__loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--celadon);
+    font-family: 'Space Mono', monospace;
+    animation: pulse 1s infinite alternate;
+}
+
 .sonic-universe__tooltip {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 10px 15px;
-    border-radius: 8px;
+    bottom: 24px;
+    left: 24px;
+    background: rgba(10, 10, 14, 0.9);
+    backdrop-filter: blur(12px);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
     pointer-events: none;
+    width: 200px;
     z-index: 10;
-    backdrop-filter: blur(4px);
-    min-width: 150px;
 }
 
 .sonic-universe__tooltip h3 {
     margin: 0;
     font-size: 14px;
     font-weight: 600;
-    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sonic-universe__tooltip p {
-    margin: 4px 0 0;
+    margin: 4px 0 0 0;
     font-size: 12px;
     color: #aaa;
 }
 
-.sonic-universe__loading {
+.wormhole-toggle-btn {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 24px;
+    right: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
-    font-size: 18px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 20;
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+}
+
+.wormhole-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }

@@ -67,12 +67,32 @@ class TrackRecommender:
             self._is_fitted = True
             logger.info(f"Loaded {len(self._track_ids)} cached embeddings")
         else:
-            logger.warning("No embedding cache found. Recommender will be empty until scan.")
-            self._is_fitted = False
+            logger.warning("No embedding cache found. Generating MOCK embeddings for all tracks.")
+            
+            # Mock Generation Strategy
+            self._track_ids = [t.id for t in tracks]
+            if not self._track_ids:
+                logger.warning("No tracks in DB to fit.")
+                self._is_fitted = False
+                return
+
+            # Generate random normalized vectors (simulating high-dim embeddings)
+            # Dimension 128 is common for audio embeddings
+            emb_matrix = np.random.randn(len(self._track_ids), 128)
+            # Normalize
+            norms = np.linalg.norm(emb_matrix, axis=1, keepdims=True)
+            self._embeddings = emb_matrix / (norms + 1e-10)
+            
+            self._is_fitted = True
             
         if self._is_fitted and self._embeddings is not None:
+             # Ensure n_neighbors doesn't exceed sample count
+             effective_n_neighbors = min(self.n_neighbors, len(self._track_ids))
+             if effective_n_neighbors < 1:
+                 effective_n_neighbors = 1
+                 
              self._model = NearestNeighbors(
-                n_neighbors=self.n_neighbors, 
+                n_neighbors=effective_n_neighbors, 
                 metric='cosine', 
                 algorithm='brute'
             )
@@ -196,6 +216,88 @@ class TrackRecommender:
                 break
                 
         return playlist
+
+    def get_path_between_tracks(
+        self,
+        start_id: int,
+        end_id: int,
+        steps: int = 10
+    ) -> List[int]:
+        """
+        Find a musical path (Wormhole) between two tracks using SLERP.
+        """
+        if not self._is_fitted or self._model is None:
+            return []
+
+        # 1. Get Indices
+        try:
+            start_idx = self._track_ids.index(start_id)
+            end_idx = self._track_ids.index(end_id)
+        except ValueError:
+            return []
+            
+        start_vec = self._embeddings[start_idx]
+        end_vec = self._embeddings[end_idx]
+        
+        # 2. SLERP (Spherical Linear Interpolation)
+        # We generate 'steps' points between 0 and 1
+        path_ids = [start_id]
+        
+        # Helper: Cosine interpolation (simplified SLERP for normalized vectors)
+        # Omega is angle between vectors
+        dot = np.dot(start_vec, end_vec)
+        # Clamp dot product
+        dot = np.clip(dot, -1.0, 1.0)
+        
+        omega = np.arccos(dot)
+        sin_omega = np.sin(omega)
+        
+        if sin_omega < 1e-6:
+            # Linear interpolation if vectors are parallel
+            for t in np.linspace(0, 1, steps + 2)[1:-1]:
+                target = (1 - t) * start_vec + t * end_vec
+                # Find nearest
+                idx = self._find_nearest_to_vector(target, exclude_ids=path_ids + [end_id])
+                if idx is not None:
+                    path_ids.append(self._track_ids[idx])
+        else:
+            # SLERP
+            for t in np.linspace(0, 1, steps + 2)[1:-1]:
+                # Formula: (sin((1-t)*omega)/sin(omega)) * v0 + (sin(t*omega)/sin(omega)) * v1
+                c0 = np.sin((1 - t) * omega) / sin_omega
+                c1 = np.sin(t * omega) / sin_omega
+                
+                target = c0 * start_vec + c1 * end_vec
+                
+                # Find nearest neighbor for this abstract vector
+                idx = self._find_nearest_to_vector(target, exclude_ids=path_ids + [end_id])
+                if idx is not None:
+                    path_ids.append(self._track_ids[idx])
+                    
+        path_ids.append(end_id)
+        return path_ids
+
+    def _find_nearest_to_vector(self, vector: np.ndarray, exclude_ids: List[int], k: int = 5) -> Optional[int]:
+        """
+        Find closest track to a raw vector, excluding specific IDs.
+        """
+        if not self._is_fitted:
+            return None
+            
+        request_n = k + len(exclude_ids)
+        # Clamp to avoid requesting more than available
+        request_n = min(request_n, len(self._track_ids))
+        
+        if request_n <= 0:
+            return None
+            
+        distances, indices = self._model.kneighbors(vector.reshape(1, -1), n_neighbors=request_n)
+        
+        for idx in indices[0]:
+            tid = self._track_ids[idx]
+            if tid not in exclude_ids:
+                return idx
+        return None
 
 # Singleton
 _recommender_instance: Optional[TrackRecommender] = None

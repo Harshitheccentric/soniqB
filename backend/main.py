@@ -41,6 +41,8 @@ from backend.routes import universe
 app.include_router(universe.router)
 from backend.routes import recommendations_xai
 app.include_router(recommendations_xai.router)
+from backend.routes import wormhole
+app.include_router(wormhole.router)
 
 
 @app.get("/")
