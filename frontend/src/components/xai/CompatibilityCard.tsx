@@ -17,8 +17,14 @@ interface ExplanationData {
     match_score: number;
     reasons: string[];
     features: {
-        track: { tempo: number; energy: number; danceability: number; acousticness: number };
-        user: { tempo: number; energy: number; danceability: number; acousticness: number };
+        track: {
+            tempo: number; energy: number; danceability: number;
+            acousticness: number; valence: number; instrumentalness: number;
+        };
+        user: {
+            tempo: number; energy: number; danceability: number;
+            acousticness: number; valence: number; instrumentalness: number;
+        };
     };
 }
 
@@ -52,11 +58,13 @@ export default function CompatibilityCard({ trackId, onClose }: CompatibilityCar
 
     if (!data && !loading) return null;
 
-    // Transform data for Recharts
+    // Transform data for Recharts (6 Axes)
     const chartData: ComparisonData[] = data ? [
         { subject: 'Tempo', A: normalize(data.features.user.tempo, 0, 200), B: normalize(data.features.track.tempo, 0, 200), fullMark: 100 },
         { subject: 'Energy', A: data.features.user.energy * 100, B: data.features.track.energy * 100, fullMark: 100 },
+        { subject: 'Mood', A: data.features.user.valence * 100, B: data.features.track.valence * 100, fullMark: 100 },
         { subject: 'Dance', A: data.features.user.danceability * 100, B: data.features.track.danceability * 100, fullMark: 100 },
+        { subject: 'Instr.', A: data.features.user.instrumentalness * 100, B: data.features.track.instrumentalness * 100, fullMark: 100 },
         { subject: 'Acoustic', A: data.features.user.acousticness * 100, B: data.features.track.acousticness * 100, fullMark: 100 },
     ] : [];
 
