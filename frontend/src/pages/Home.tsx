@@ -12,6 +12,7 @@ import Analysis from '../pages/Analysis';
 import ControlDock from '../components/controls/ControlDock';
 import UploadSong from '../components/UploadSong';
 import IntroOverlay from '../components/IntroOverlay';
+import SonicUniverse from '../components/universe/SonicUniverse';
 import type { Track } from '../types';
 import './Home.css';
 
@@ -56,6 +57,8 @@ export default function Home() {
         return <Analysis />;
       case 'playlists':
         return <TrackLibrary onTrackSelect={handleTrackSelect} />;
+      case 'universe':
+        return <SonicUniverse />;
       default:
         return <ActiveTrackPanel track={currentTrack} />;
     }
@@ -79,7 +82,7 @@ export default function Home() {
         />
 
         <main className="home-page__main">
-          <div className="home-page__content">
+          <div className={`home-page__content ${activeView === 'universe' ? 'home-page__content--full-bleed' : ''}`}>
             {renderContent()}
           </div>
         </main>

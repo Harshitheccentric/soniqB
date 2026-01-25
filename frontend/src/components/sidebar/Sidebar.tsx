@@ -8,12 +8,13 @@ import {
     VscGraph,
     VscAccount,
     VscSignIn,
-    VscSignOut
+    VscSignOut,
+    VscGlobe
 } from 'react-icons/vsc';
 import './Sidebar.css';
 
 // Define types for Home views
-export type ViewType = 'nowPlaying' | 'metrics' | 'analysis' | 'playlists';
+export type ViewType = 'nowPlaying' | 'metrics' | 'analysis' | 'playlists' | 'universe';
 
 interface SidebarProps {
     activeView: ViewType;
@@ -41,6 +42,12 @@ export default function Sidebar({ activeView, onViewChange, onUploadClick }: Sid
             label: 'Analysis',
             onClick: () => onViewChange('analysis'),
             className: isItemActive('analysis') ? 'dock-item--active' : ''
+        },
+        {
+            icon: <VscGlobe />,
+            label: 'Universe',
+            onClick: () => onViewChange('universe'),
+            className: isItemActive('universe') ? 'dock-item--active' : ''
         },
         {
             icon: <VscLibrary />,

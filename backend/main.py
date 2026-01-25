@@ -35,7 +35,10 @@ app.include_router(recommendations.router)
 app.include_router(analytics.router)
 app.include_router(events.router)
 app.include_router(playlists.router)
+app.include_router(playlists.router)
 app.include_router(ml.router)
+from backend.routes import universe
+app.include_router(universe.router)
 
 
 @app.get("/")

@@ -1,0 +1,54 @@
+.sonic-universe {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+    background: black;
+    position: relative;
+    overflow: hidden;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sonic-universe canvas {
+    flex: 1;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.sonic-universe__tooltip {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    pointer-events: none;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+    min-width: 150px;
+}
+
+.sonic-universe__tooltip h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.sonic-universe__tooltip p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.sonic-universe__loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 18px;
+}
