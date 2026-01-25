@@ -8,6 +8,7 @@ import type { Track } from '../../types';
 import { getAlbumArtUrl } from '../../api/musicApi';
 import ContextMenu from '../common/ContextMenu';
 import AddToPlaylistModal from '../common/AddToPlaylistModal';
+import CompatibilityCard from '../xai/CompatibilityCard';
 import './ActiveTrackPanel.css';
 
 interface ActiveTrackPanelProps {
@@ -18,6 +19,7 @@ export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number }>({ visible: false, x: 0, y: 0 });
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
   const [playlistModalMode, setPlaylistModalMode] = useState<'create' | 'list'>('create');
 
   if (!track) {
@@ -79,7 +81,7 @@ export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
         </p>
 
         {track.predicted_genre && (
-          <div className="active-track-panel__genre">
+          <div className="active-track-panel__genre" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span className="genre-badge">
               {track.predicted_genre}
               {track.genre_confidence && (
@@ -88,9 +90,35 @@ export default function ActiveTrackPanel({ track }: ActiveTrackPanelProps) {
                 </span>
               )}
             </span>
+
+            <button
+              className="why-button"
+              onClick={() => setShowExplanation(true)}
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '20px',
+                padding: '4px 12px',
+                color: '#ccc',
+                fontSize: '11px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            >
+              Why this song?
+            </button>
           </div>
         )}
       </div>
+
+      {showExplanation && (
+        <CompatibilityCard
+          trackId={track.id}
+          onClose={() => setShowExplanation(false)}
+        />
+      )}
 
       {/* Context Menu and Modals */}
       <ContextMenu
