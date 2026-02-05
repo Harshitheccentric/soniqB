@@ -9,6 +9,7 @@ import { AudioPlayerProvider } from './context/AudioPlayerContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SidebarProvider } from './context/SidebarContext';
 import { AlertProvider } from './context/AlertContext';
+import { ToastProvider } from './context/ToastContext';
 import { useEventLogger } from './hooks/useEventLogger';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './auth/LoginPage';
@@ -73,9 +74,11 @@ export default function App() {
           <SessionProvider>
             <AudioPlayerProvider>
               <AlertProvider>
-                <EventLoggerWrapper>
-                  <AppContent />
-                </EventLoggerWrapper>
+                <ToastProvider>
+                  <EventLoggerWrapper>
+                    <AppContent />
+                  </EventLoggerWrapper>
+                </ToastProvider>
               </AlertProvider>
             </AudioPlayerProvider>
           </SessionProvider>

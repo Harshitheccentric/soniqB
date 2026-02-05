@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../../api/musicApi';
+import { useSession } from '../../hooks/useSession';
+import { useToast } from '../../context/ToastContext';
 import './WormholeCreator.css';
 
 interface WormholeCreatorProps {
@@ -21,6 +23,8 @@ export default function WormholeCreator({
     onClose,
     path
 }: WormholeCreatorProps) {
+    const { session } = useSession();
+    const { showToast } = useToast();
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -31,7 +35,7 @@ export default function WormholeCreator({
         setGenerating(true);
         setSaved(false);
         try {
-            const res = await axios.get('http://localhost:8000/recommendations/wormhole', {
+            const res = await api.get('/recommendations/wormhole', {
                 params: {
                     start_track_id: startNode.id,
                     end_track_id: endNode.id,
@@ -41,6 +45,7 @@ export default function WormholeCreator({
             onGenerate(res.data);
         } catch (err) {
             console.error("Wormhole generation failed", err);
+            showToast('Failed to generate wormhole path', 'error');
         } finally {
             setGenerating(false);
         }
@@ -49,12 +54,15 @@ export default function WormholeCreator({
     const handleSavePlaylist = async () => {
         if (!path || path.length === 0) return;
 
+        if (!session?.user?.id) {
+            showToast('Please log in to save playlists', 'error');
+            return;
+        }
+
         setSaving(true);
         try {
-            // Use manual playlist creation with hardcoded user_id for now (or mocked context)
-            // Ideally should fetch current user from context
             const payload = {
-                user_id: 1,
+                user_id: session.user.id,
                 name: `Wormhole: ${startNode.title} to ${endNode.title}`,
                 tracks: path.map((node, index) => ({
                     track_id: node.id,
@@ -62,11 +70,12 @@ export default function WormholeCreator({
                 }))
             };
 
-            await axios.post('http://localhost:8000/playlists/manual', payload);
+            await api.post('/playlists/manual', payload);
             setSaved(true);
+            showToast('Playlist saved successfully!', 'success');
         } catch (err) {
             console.error("Failed to save playlist", err);
-            // alert("Failed to save playlist"); // simple error reporting
+            showToast('Failed to save playlist', 'error');
         } finally {
             setSaving(false);
         }
