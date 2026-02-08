@@ -21,6 +21,7 @@
   /* Text Colors */
   --color-text-primary: #2a2a2a;
   --color-text-secondary: #5a5a5a;
+  --color-text-tertiary: #9ca3af;
   --color-text-muted: #8a8a8a;
   --color-text-inverse: #f5f5f5;
 
@@ -44,6 +45,14 @@
   /* Glow Colors */
   --glow-primary: rgba(141, 90, 151, 0.25);
   --glow-secondary: rgba(141, 90, 151, 0.15);
+
+  /* Status Colors */
+  --color-success: #4caf50;
+  --color-success-rgb: 76, 175, 80;
+  --color-error: #f44336;
+  --color-error-rgb: 244, 67, 54;
+  --color-warning: #ff9800;
+  --color-info: #2196f3;
 
   /* Spacing Scale */
   --space-xs: 0.25rem;
@@ -98,6 +107,7 @@
   /* Text Colors */
   --color-text-primary: #f5f5f5;
   --color-text-secondary: #c5c5c5;
+  --color-text-tertiary: #6b7280;
   --color-text-muted: #9a9a9a;
   --color-text-inverse: #1a1a1a;
 

@@ -159,14 +159,27 @@ export default function Analysis() {
 }
 
 function getGenreColor(genre: string) {
+    if (!genre) return '#9E9E9E';
+
+    // Normalize to Title Case or lower for matching
+    const normalized = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+
     const colors: Record<string, string> = {
-        'Pop': '#FF4081',
-        'Rock': '#F44336',
-        'Electronic': '#00E5FF',
-        'Hip-Hop': '#FFC107',
-        'Classical': '#E040FB',
-        'Jazz': '#FF9800',
-        'Metal': '#212121',
+        'Pop': '#FF00CC', 'pop': '#FF00CC',
+        'Rock': '#FF3300', 'rock': '#FF3300',
+        'Electronic': '#00FFFF', 'electronic': '#00FFFF',
+        'Hip-hop': '#FFD700', 'hip-hop': '#FFD700',
+        'Hip-Hop': '#FFD700',
+        'Classical': '#D500F9', 'classical': '#D500F9',
+        'Jazz': '#FF9100', 'jazz': '#FF9100',
+        'Metal': '#B0BEC5', 'metal': '#B0BEC5',
+        'Country': '#76FF03', 'country': '#76FF03',
+        'Folk': '#8BC34A', 'folk': '#8BC34A',
+        'R&b': '#651FFF', 'r&b': '#651FFF',
+        'Instrumental': '#00B0FF', 'instrumental': '#00B0FF',
+        'International': '#FF1744', 'international': '#FF1744',
+        'Experimental': '#AA00FF', 'experimental': '#AA00FF',
+        'Unknown': '#607D8B', 'unknown': '#607D8B'
     };
-    return colors[genre] || '#9E9E9E';
+    return colors[normalized] || colors[genre] || '#9E9E9E';
 }

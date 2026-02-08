@@ -44,6 +44,7 @@ export interface Track {
   predicted_genre: string | null;
   genre_confidence: number | null;
   uploaded_by_username?: string;
+  uploaded_by_user_id?: number;
 }
 
 // ============================================

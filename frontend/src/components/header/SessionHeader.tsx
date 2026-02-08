@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 import type { User } from '../../types';
 import './SessionHeader.css';
@@ -34,17 +35,70 @@ const MoonIcon = () => (
   </svg>
 );
 
+const ModelIcon = ({ status }: { status: string }) => {
+  const color = status === 'ready' ? 'var(--color-success)' :
+    status === 'error' ? 'var(--color-error)' :
+      'var(--color-text-tertiary)';
+
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z" />
+      {status === 'ready' && <path d="M9 12l2 2 4-4" />}
+      {status === 'error' && <line x1="12" y1="8" x2="12" y2="12" />}
+      {status === 'error' && <line x1="12" y1="16" x2="12.01" y2="16" />}
+    </svg>
+  );
+};
+
 export default function SessionHeader({ user, onLogout }: SessionHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [sessionTime, setSessionTime] = useState(0);
+  const [modelStatus, setModelStatus] = useState<string>('loading');
 
   useEffect(() => {
     const interval = setInterval(() => {
       setSessionTime((prev) => prev + 1);
     }, 1000);
 
-    return () => clearInterval(interval);
+    // Initial check and auto-load
+    checkAndLoadModel();
+
+    // Poll status every 30s to keep sync
+    const statusInterval = setInterval(checkAndLoadModel, 30000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(statusInterval);
+    };
   }, []);
+
+  const checkAndLoadModel = async () => {
+    try {
+      const res = await axios.get('/api/ml/status');
+      const status = res.data.status;
+      setModelStatus(status);
+
+      // Auto-load if not loaded
+      if (status === 'not_loaded') {
+        setModelStatus('loading'); // Show pulsing grey
+        try {
+          // Trigger load
+          await axios.post('/api/ml/load');
+          // Wait a bit and check again
+          setTimeout(async () => {
+            const retry = await axios.get('/api/ml/status');
+            setModelStatus(retry.data.status);
+          }, 2000);
+        } catch (loadErr) {
+          console.error('Failed to auto-load model:', loadErr);
+          // Don't set error state yet, maybe it's just busy
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check ML status:', error);
+      setModelStatus('error');
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -72,6 +126,14 @@ export default function SessionHeader({ user, onLogout }: SessionHeaderProps) {
       </div>
 
       <div className="session-header__right">
+        {/* ML Model Status */}
+        <div
+          className={`model-status model-status--${modelStatus}`}
+          title={`ML Model: ${modelStatus.replace('_', ' ')}`}
+        >
+          <ModelIcon status={modelStatus} />
+        </div>
+
         {/* Theme Toggle */}
         <button
           onClick={toggleTheme}

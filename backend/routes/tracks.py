@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, StreamingResponse, Response
 from sqlalchemy.orm import Session
 from typing import List
 from backend.db import get_db
-from backend.models import Track, User, Playlist, PlaylistTrack
+from backend.models import Track, User, Playlist, PlaylistTrack, ListeningEvent
 from backend.schemas import TrackResponse
 from backend.auth import get_current_user
 
@@ -172,6 +172,26 @@ def scan_library(db: Session = Depends(get_db)):
     valid_exts = {'.mp3', '.wav', '.ogg', '.m4a', '.flac', '.opus'}
     
     for root, _, files in os.walk(audio_dir):
+        # Infer genre from folder name
+        # root is like "backend/storage/tracks/Rock" -> genre="Rock"
+        rel_path = os.path.relpath(root, audio_dir)
+        
+        # If file is in root "tracks/" folder, genre is None
+        # If file is in "tracks/uploads/...", we might skip or mark Unknown (user instruction focused on genre folders)
+        # For now, let's treat any immediate subdirectory as a potential genre
+        current_genre = None
+        genre_confidence = None
+        
+        if rel_path != ".":
+            # Taking the top-level folder as genre
+            # e.g. "Rock/Subfolder" -> "Rock"
+            top_folder = rel_path.split(os.sep)[0]
+            
+            # Skip "uploads" as it's a staging area
+            if top_folder != "uploads" and top_folder != "audio":
+                 current_genre = top_folder
+                 genre_confidence = 1.0
+
         for file in files:
             ext = os.path.splitext(file)[1].lower()
             if ext not in valid_exts:
@@ -183,6 +203,12 @@ def scan_library(db: Session = Depends(get_db)):
             # Check if exists in DB (by path)
             exists = db.query(Track).filter(Track.audio_path == full_path).first()
             if exists:
+                # OPTIONAL: Update genre if it's missing but we found it in a folder?
+                # The user said "take at face value". So maybe we SHOULD update it.
+                if current_genre and (not exists.predicted_genre or exists.genre_confidence < 1.0):
+                    exists.predicted_genre = current_genre
+                    exists.genre_confidence = 1.0
+                    added += 1 # Counting updates as activity
                 continue
                 
             # Parse metadata from filename
@@ -205,7 +231,8 @@ def scan_library(db: Session = Depends(get_db)):
                 title=title,
                 artist=artist,
                 audio_path=full_path,
-                predicted_genre=None
+                predicted_genre=current_genre,
+                genre_confidence=genre_confidence
             )
             db.add(new_track)
             added += 1
@@ -280,35 +307,43 @@ async def upload_track(
     title = title.replace('_', ' ')
     
     # Classify genre using ML
-    genre = None
-    confidence = None
+    genre = "Unknown"
+    confidence = 0.0
     try:
         from backend.ml.genre_classifier import get_genre_classifier
         classifier = get_genre_classifier()
-        genre, confidence = classifier.classify_audio_file(str(file_path))
-        
-        # Move file to genre folder if classified
-        if genre:
-            genre_dir = Path("backend/storage/tracks") / genre
-            genre_dir.mkdir(parents=True, exist_ok=True)
-            
-            new_path = genre_dir / file_path.name
-            
-            # handle duplicates in genre folder
-            counter = 1
-            while new_path.exists():
-                stem = file_path.stem
-                new_path = genre_dir / f"{stem}_{counter}{file_ext}"
-                counter += 1
-                
-            # Move file
-            import shutil
-            shutil.move(str(file_path), str(new_path))
-            file_path = new_path
-            
+        # This might fail if model is missing
+        pred_genre, pred_conf = classifier.classify_audio_file(str(file_path))
+        if pred_genre:
+            genre = pred_genre
+            confidence = pred_conf
     except Exception as e:
-        print(f"Warning: Genre classification/move failed: {e}")
-        # Continue without genre - not critical
+        print(f"Warning: Genre classification failed: {e}")
+        # Fallback to Unknown
+    
+    # Move file to genre folder (Unknown or classified)
+    try:
+        genre_dir = Path("backend/storage/tracks") / genre
+        genre_dir.mkdir(parents=True, exist_ok=True)
+        
+        new_path = genre_dir / file_path.name
+        
+        # handle duplicates in genre folder
+        counter = 1
+        while new_path.exists():
+            stem = file_path.stem
+            new_path = genre_dir / f"{stem}_{counter}{file_ext}"
+            counter += 1
+            
+        # Move file
+        import shutil
+        shutil.move(str(file_path), str(new_path))
+        file_path = new_path
+        
+    except Exception as e:
+        print(f"Warning: Failed to move file to genre folder: {e}")
+        # If move fails, we keep the file in uploads dir, but we still have a DB record.
+        # Ideally we might want to fail the upload, but for now we proceed.
     
     # Create track record
     new_track = Track(
@@ -354,4 +389,45 @@ async def upload_track(
     db.refresh(new_track)
     
     return new_track
+
+
+@router.delete("/tracks/{track_id}")
+def delete_track(track_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Delete a track.
+    Only allows deletion if the track was uploaded by the current user.
+    """
+    try:
+        track = db.query(Track).filter(Track.id == track_id).first()
+        if not track:
+            raise HTTPException(status_code=404, detail="Track not found")
+            
+        # Permission check
+        # We check if the track has an uploaded_by_user_id and if it matches
+        if not track.uploaded_by_user_id or track.uploaded_by_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only delete tracks you uploaded")
+            
+        # Delete audio file
+        if track.audio_path and os.path.exists(track.audio_path):
+            try:
+                os.remove(track.audio_path)
+            except OSError as e:
+                print(f"Error deleting file {track.audio_path}: {e}")
+                # Continue
+                
+        # Remove from playlists
+        db.query(PlaylistTrack).filter(PlaylistTrack.track_id == track_id).delete()
+
+        # Remove listening events (FK constraint)
+        db.query(ListeningEvent).filter(ListeningEvent.track_id == track_id).delete()
+        
+        # Delete from DB
+        db.delete(track)
+        db.commit()
+        
+        return {"message": "Track deleted successfully"}
+    except Exception as e:
+        print(f"Delete failed: {e}") # Debug log
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete track: {str(e)}")
 

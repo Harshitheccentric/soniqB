@@ -207,6 +207,11 @@ export const uploadTrack = async (file, userId, onUploadProgress) => {
     return response.data;
 };
 
+export const deleteTrack = async (trackId) => {
+    const response = await api.delete(`/tracks/${trackId}`);
+    return response.data;
+};
+
 
 // ML API calls (Phase 3)
 export const getMLStatus = async () => {

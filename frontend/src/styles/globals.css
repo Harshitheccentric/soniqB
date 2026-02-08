@@ -15,6 +15,9 @@ html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  overflow: hidden;
+  /* Prevent global scroll */
 }
 
 body {
@@ -23,15 +26,24 @@ body {
   color: var(--color-text-primary);
   background: var(--color-background);
   line-height: 1.5;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
+  /* Prevent global scroll */
 }
 
 #root {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  /* Prevent global scroll */
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-text-primary);
@@ -100,7 +112,8 @@ img {
 }
 
 /* List Reset */
-ul, ol {
+ul,
+ol {
   list-style: none;
 }
 
@@ -119,9 +132,12 @@ ul, ol {
 
 /* Loading States */
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -136,6 +152,7 @@ ul, ol {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -145,6 +162,7 @@ ul, ol {
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -164,6 +182,7 @@ ul, ol {
     transform: translateY(20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -182,6 +201,7 @@ ul, ol {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
