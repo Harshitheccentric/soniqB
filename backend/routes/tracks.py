@@ -1,6 +1,7 @@
 """Track and audio streaming routes with Range request support for seeking."""
 import os
 import re
+import random
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, Form
 from fastapi.responses import FileResponse, StreamingResponse, Response
@@ -190,7 +191,8 @@ def scan_library(db: Session = Depends(get_db)):
             # Skip "uploads" as it's a staging area
             if top_folder != "uploads" and top_folder != "audio":
                  current_genre = top_folder
-                 genre_confidence = 1.0
+                 # User request: Random confidence between 80-95% for seeded tracks
+                 genre_confidence = random.uniform(0.8, 0.95)
 
         for file in files:
             ext = os.path.splitext(file)[1].lower()
@@ -205,9 +207,10 @@ def scan_library(db: Session = Depends(get_db)):
             if exists:
                 # OPTIONAL: Update genre if it's missing but we found it in a folder?
                 # The user said "take at face value". So maybe we SHOULD update it.
-                if current_genre and (not exists.predicted_genre or exists.genre_confidence < 1.0):
+                if current_genre:
+                    # Always update if we find it in a genre folder, per user request
                     exists.predicted_genre = current_genre
-                    exists.genre_confidence = 1.0
+                    exists.genre_confidence = random.uniform(0.8, 0.95)
                     added += 1 # Counting updates as activity
                 continue
                 
