@@ -236,3 +236,56 @@
     text-transform: uppercase;
     font-weight: 600;
 }
+
+/* Genre Filter Bar */
+.track-library__filter-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+}
+
+.track-library__filter-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.track-library__filter-select {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-card-solid);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238d5a97' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-md) center;
+    padding-right: var(--space-2xl);
+}
+
+.track-library__filter-select:hover {
+    border-color: var(--vintage-lavender);
+}
+
+.track-library__filter-select:focus {
+    outline: none;
+    border-color: var(--vintage-lavender);
+    box-shadow: 0 0 0 3px rgba(141, 90, 151, 0.2);
+}
+
+.track-library__filter-select option {
+    background: var(--bg-card-solid);
+    color: var(--color-text-primary);
+    padding: var(--space-sm);
+}

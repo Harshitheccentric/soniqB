@@ -3,7 +3,7 @@
  * Shows playlists with type badges, can open playlists to view/play tracks
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from '../../hooks/useSession';
 import type { Track } from '../../types';
 import { useAlert } from '../../context/AlertContext';
@@ -74,6 +74,26 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
     const [classifying, setClassifying] = useState(false);
     const [classificationResult, setClassificationResult] = useState<{ classified: number, total: number } | null>(null);
     const [generating, setGenerating] = useState(false);
+
+    // Genre filter for All Tracks
+    const [genreFilter, setGenreFilter] = useState<string>('all');
+
+    // Extract unique genres from tracks
+    const availableGenres = useMemo(() => {
+        const genres = new Set<string>();
+        tracks.forEach(track => {
+            if (track.predicted_genre) {
+                genres.add(track.predicted_genre);
+            }
+        });
+        return Array.from(genres).sort();
+    }, [tracks]);
+
+    // Filter tracks by genre
+    const filteredTracks = useMemo(() => {
+        if (genreFilter === 'all') return tracks;
+        return tracks.filter(track => track.predicted_genre === genreFilter);
+    }, [tracks, genreFilter]);
 
     // Context Menu State
     const [contextMenu, setContextMenu] = useState<{ visible: boolean, x: number, y: number }>({ visible: false, x: 0, y: 0 });
@@ -512,17 +532,34 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
 
             {activeTab === 'tracks' && (
                 <div className="track-library__tracks">
-                    {tracks.length === 0 ? (
+                    {/* Genre Filter Dropdown */}
+                    <div className="track-library__filter-bar">
+                        <label className="track-library__filter-label">Filter by Genre:</label>
+                        <select
+                            className="track-library__filter-select"
+                            value={genreFilter}
+                            onChange={(e) => setGenreFilter(e.target.value)}
+                        >
+                            <option value="all">All Genres ({tracks.length} tracks)</option>
+                            {availableGenres.map(genre => (
+                                <option key={genre} value={genre}>
+                                    {genre} ({tracks.filter(t => t.predicted_genre === genre).length})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {filteredTracks.length === 0 ? (
                         <div className="track-library__empty">
-                            <p>No tracks found</p>
+                            <p>No tracks found{genreFilter !== 'all' ? ` for genre "${genreFilter}"` : ''}</p>
                         </div>
                     ) : (
                         <div className="track-library__list">
-                            {tracks.map((track, index) => (
+                            {filteredTracks.map((track, index) => (
                                 <button
                                     key={track.id}
                                     className="track-library__item"
-                                    onClick={() => onTrackSelect(track, tracks)}
+                                    onClick={() => onTrackSelect(track, filteredTracks)}
                                     onContextMenu={(e) => {
                                         e.preventDefault();
                                         setContextMenuTrack(track);

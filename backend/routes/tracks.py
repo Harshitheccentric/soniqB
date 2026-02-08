@@ -190,7 +190,7 @@ def scan_library(db: Session = Depends(get_db)):
             
             # Skip "uploads" as it's a staging area
             if top_folder != "uploads" and top_folder != "audio":
-                 current_genre = top_folder
+                 current_genre = top_folder.lower()
                  # User request: Random confidence between 80-95% for seeded tracks
                  genre_confidence = random.uniform(0.8, 0.95)
 
@@ -319,7 +319,8 @@ async def upload_track(
         pred_genre, pred_conf = classifier.classify_audio_file(str(file_path))
         if pred_genre:
             genre = pred_genre
-            confidence = pred_conf
+            # User request: Random confidence between 65-90% with mode at 75%
+            confidence = random.triangular(0.65, 0.90, 0.75)
     except Exception as e:
         print(f"Warning: Genre classification failed: {e}")
         # Fallback to Unknown

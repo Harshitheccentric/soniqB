@@ -10,10 +10,11 @@ router = APIRouter()
 @router.get("/universe", tags=["visualization"])
 def get_sonic_universe(db: Session = Depends(get_db)):
     """
-    Returns 3D coordinates for all tracks to build the Sonic Universe.
-    In a real ML scenario, these would be t-SNE reduced embeddings.
-    Here, we simulate clusters based on genre.
+    Returns 3D coordinates for ALL tracks to build the Sonic Universe.
+    This is for exploration/discovery - shows the entire music library.
+    Uses simulated clusters based on genre.
     """
+    # Get ALL tracks for the universe exploration view
     tracks = db.query(Track).all()
     
     universe_data = []

@@ -152,7 +152,7 @@ def classify_track(track_id: int, db: Session = Depends(get_db)):
         genre, confidence = classifier.classify_audio_file(track.audio_path)
         
         # Update track in database
-        track.predicted_genre = genre
+        track.predicted_genre = genre.lower() if genre else genre
         db.commit()
         
         logger.info(f"Classified track {track_id}: {genre} ({confidence:.2f})")
@@ -242,7 +242,7 @@ def classify_all_tracks(db: Session = Depends(get_db)):
             
             # Update DB (don't overwrite manual labels)
             if track.genre_confidence != 1.0:
-                track.predicted_genre = genre
+                track.predicted_genre = genre.lower() if genre else genre
                 track.genre_confidence = confidence
                 
             results.append(GenreClassificationResult(
@@ -352,7 +352,7 @@ def calibrate_track(track_id: int, genre: str, db: Session = Depends(get_db)):
         classifier.add_centroid(genre, embedding)
         
         # Update track
-        track.predicted_genre = genre
+        track.predicted_genre = genre.lower() if genre else genre
         track.genre_confidence = 1.0  # Manual label is 100% confident
         db.commit()
         

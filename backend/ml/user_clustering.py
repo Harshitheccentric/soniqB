@@ -99,19 +99,35 @@ class UserClusterAnalyzer:
         # 4. Skip ratio
         skip_ratio = len(skip_events) / max(total_plays, 1)
         
-        # 5. Genre diversity (unique track IDs as proxy if no genre info)
+        # 5. Genre diversity (Shannon entropy, normalized to 0-1)
         if tracks:
-            genres = set()
+            genres = {}
             track_genres = {t['id']: t.get('predicted_genre', 'Unknown') for t in tracks}
             for e in play_events:
                 track_id = e.get('track_id')
                 if track_id in track_genres:
-                    genres.add(track_genres[track_id])
-            genre_diversity = len(genres)
+                    genre = track_genres[track_id]
+                    genres[genre] = genres.get(genre, 0) + 1
+            
+            # Calculate Shannon entropy
+            num_genres = len(genres)
+            if num_genres <= 1:
+                # No diversity possible with 0 or 1 genre
+                genre_diversity = 0.0
+            else:
+                total = sum(genres.values())
+                proportions = [count / total for count in genres.values()]
+                # Shannon entropy: -sum(p * log(p))
+                entropy = -sum(p * np.log(p) for p in proportions if p > 0)
+                # Normalize to 0-1 scale (max entropy is log(n) for n categories)
+                max_entropy = np.log(num_genres)
+                genre_diversity = entropy / max_entropy if max_entropy > 0 else 0.0
+                # Clamp to valid range
+                genre_diversity = max(0.0, min(1.0, genre_diversity))
         else:
-            # Use unique track count as proxy
+            # Use unique track ratio as proxy
             unique_tracks = len(set(e.get('track_id') for e in play_events))
-            genre_diversity = unique_tracks
+            genre_diversity = min(unique_tracks / max(total_plays, 1), 1.0)
         
         # 6. Session frequency (events per day)
         if len(events) >= 2:

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import type { Event } from '../../types';
-import { getEvents } from '../../api/musicApi';
+import { getEvents, getLikedTrackIds } from '../../api/musicApi';
 import Surface from '../common/Surface';
 import './MetricsPanel.css';
 
@@ -11,19 +11,26 @@ interface MetricsPanelProps {
 
 export default function MetricsPanel({ userId }: MetricsPanelProps) {
   const [events, setEvents] = useState<Event[]>([]);
+  const [likedSongsCount, setLikedSongsCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEvents();
+    fetchData();
   }, [userId]);
 
-  const fetchEvents = async () => {
+  const fetchData = async () => {
     try {
-      const data = await getEvents(userId);
-      setEvents(Array.isArray(data) ? data : []);
+      // Fetch events and liked songs in parallel
+      const [eventsData, likedTrackIds] = await Promise.all([
+        getEvents(userId),
+        getLikedTrackIds()
+      ]);
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+      setLikedSongsCount(Array.isArray(likedTrackIds) ? likedTrackIds.length : 0);
     } catch (error) {
-      console.error('Failed to fetch events:', error);
-      setEvents([]); // Set empty on error to prevent crash
+      console.error('Failed to fetch data:', error);
+      setEvents([]);
+      setLikedSongsCount(0);
     } finally {
       setLoading(false);
     }
@@ -39,7 +46,6 @@ export default function MetricsPanel({ userId }: MetricsPanelProps) {
 
   // Calculate stats
   const totalPlays = events.filter((e) => e.event_type === 'play').length;
-  const totalLikes = events.filter((e) => e.event_type === 'like').length;
   const totalSkips = events.filter((e) => e.event_type === 'skip').length;
   const totalDuration = events.reduce((sum, e) => sum + e.listened_duration, 0);
   const avgDuration = totalPlays > 0 ? totalDuration / totalPlays : 0;
@@ -71,8 +77,8 @@ export default function MetricsPanel({ userId }: MetricsPanelProps) {
         </div>
 
         <div className="metric-card">
-          <div className="metric-card__value">{totalLikes}</div>
-          <div className="metric-card__label">Likes</div>
+          <div className="metric-card__value">{likedSongsCount}</div>
+          <div className="metric-card__label">Liked Songs</div>
         </div>
 
         <div className="metric-card">
