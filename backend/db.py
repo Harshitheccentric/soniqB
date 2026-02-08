@@ -104,7 +104,7 @@ def seed_database():
                     if folder_name.lower() == "tracks":
                         genre = "Unknown"
                     else:
-                        genre = folder_name.capitalize()
+                        genre = folder_name.lower()
                         
                     full_path = os.path.join(root, file)
                     
@@ -194,23 +194,23 @@ def seed_database():
             
             # STRICT PLAYLIST GENERATION BASED ON NAME/USER
             if playlist.name == "Alice's Pop Mix":
-                selected_tracks = get_genre_mix(["Pop"])
+                selected_tracks = get_genre_mix(["pop"])
             elif playlist.name == "Bob's Rock & Hip-Hop":
-                selected_tracks = get_genre_mix(["Rock", "Hip-Hop"])
+                selected_tracks = get_genre_mix(["rock", "hip-hop"])
             elif playlist.name == "Charlie's Study Mode":
-                selected_tracks = get_genre_mix(["Instrumental", "Electronic"])
+                selected_tracks = get_genre_mix(["instrumental", "electronic"])
             elif playlist.type == "liked_songs":
                 # For Liked Songs, keep the mixed taste profile
                 if username == "alice":
-                    selected_tracks = get_genre_mix(["Pop", "Electronic", "International"])
+                    selected_tracks = get_genre_mix(["pop", "electronic", "international"])
                 elif username == "bob":
-                    selected_tracks = get_genre_mix(["Rock", "Hip-Hop", "Experimental"])
+                    selected_tracks = get_genre_mix(["rock", "hip-hop", "experimental"])
                 elif username == "charlie":
-                    selected_tracks = get_genre_mix(["Instrumental", "Folk", "Pop"])
+                    selected_tracks = get_genre_mix(["instrumental", "folk", "pop"])
                 elif username == "diana":
-                    selected_tracks = get_genre_mix(["Rock", "Electronic", "Hip-Hop"])
+                    selected_tracks = get_genre_mix(["rock", "electronic", "hip-hop"])
                 else:
-                    selected_tracks = get_genre_mix(["International", "Folk", "Experimental"])
+                    selected_tracks = get_genre_mix(["international", "folk", "experimental"])
             
             # Take a subset if we have tracks
             if selected_tracks:
@@ -279,21 +279,21 @@ def seed_database():
                     # Advance time
                     current_date_ref = current_date  # just keeping timestamp same for batch simplicity or could increment if needed
             
-            # Alice (Pop/Electronic/International)
+            # Alice (pop/electronic/international)
             if random.random() > 0.1:
-                create_session(users[0].id, ["Pop", "Electronic", "International"])
+                create_session(users[0].id, ["pop", "electronic", "international"])
 
-            # Bob (Rock/Hip-Hop/Experimental)
+            # Bob (rock/hip-hop/experimental)
             if random.random() > 0.2:
-                create_session(users[1].id, ["Rock", "Hip-Hop", "Experimental"])
+                create_session(users[1].id, ["rock", "hip-hop", "experimental"])
 
-            # Charlie (Instrumental/Folk/Pop) - Study/Chill
+            # Charlie (instrumental/folk/pop) - Study/Chill
             if random.random() > 0.1:
-                create_session(users[2].id, ["Instrumental", "Folk", "Pop"])
+                create_session(users[2].id, ["instrumental", "folk", "pop"])
                 
-            # Diana (Rock/Electronic/Hip-Hop)
+            # Diana (rock/electronic/hip-hop)
             if random.random() > 0.3:
-                 create_session(users[3].id, ["Rock", "Electronic", "Hip-Hop"])
+                 create_session(users[3].id, ["rock", "electronic", "hip-hop"])
 
         db.add_all(events)
         db.commit()
