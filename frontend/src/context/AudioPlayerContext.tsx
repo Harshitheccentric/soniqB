@@ -1,6 +1,6 @@
 import { createContext, useState, useRef, useEffect, type ReactNode } from 'react';
 import type { Track, AudioPlayerState } from '../types';
-import axios from 'axios';
+import api from '../api/musicApi';
 
 export interface AudioPlayerContextValue extends AudioPlayerState {
     // Playback controls
@@ -116,9 +116,9 @@ export function AudioPlayerProvider({
                         ? '&' + skipIds.map(id => `skipped_track_ids=${id}`).join('&')
                         : '';
 
-                    const url = `/api/recommendations/next?current_track_id=${state.currentTrack.id}${skipQuery}`;
+                    const url = `/recommendations/next?current_track_id=${state.currentTrack.id}${skipQuery}`;
 
-                    const { data: nextTrack } = await axios.get(url);
+                    const { data: nextTrack } = await api.get(url);
 
                     if (nextTrack) {
                         console.log("Auto-playing recommendation:", nextTrack.title);

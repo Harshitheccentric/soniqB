@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars, Line } from '@react-three/drei';
 import * as THREE from 'three';
-import axios from 'axios';
+import api from '../../api/musicApi';
 import { useAudioPlayer } from '../../hooks/useAudioPlayer';
 import WormholeCreator from '../wormhole/WormholeCreator';
 import './SonicUniverse.css';
@@ -179,7 +179,7 @@ export default function SonicUniverse() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await axios.get('http://localhost:8000/universe');
+                const response = await api.get('/universe');
                 setData(response.data);
             } catch (error) {
                 console.error('Failed to fetch universe data:', error);
@@ -202,7 +202,7 @@ export default function SonicUniverse() {
             }
         } else {
             // Default Play Logic
-            axios.get(`http://localhost:8000/tracks/${node.id}`).then(res => {
+            api.get(`/tracks/${node.id}`).then(res => {
                 const track = res.data;
 
                 // If we have a path, play the path!

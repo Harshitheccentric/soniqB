@@ -14,11 +14,14 @@ interface UseEventLoggerOptions {
 }
 
 export function useEventLogger({ user, enabled = true }: UseEventLoggerOptions) {
-  const { currentTrack, currentTime } = useAudioPlayer();
-  
+  const { currentTrack, currentTime, isPlaying, queueIndex } = useAudioPlayer();
+
   // Track playback start time for duration calculation
   const playStartTimeRef = useRef<number>(0);
   const lastEventTypeRef = useRef<EventType | null>(null);
+  const lastTrackIdRef = useRef<number | null>(null);
+  const lastQueueIndexRef = useRef<number>(-1);
+  const wasPlayingRef = useRef<boolean>(false);
 
   /**
    * Log event with current listened duration
@@ -30,7 +33,7 @@ export function useEventLogger({ user, enabled = true }: UseEventLoggerOptions) 
     }
 
     const listenedDuration = currentTime - playStartTimeRef.current;
-    
+
     try {
       const payload = createEventPayload(
         user.id,
@@ -38,10 +41,10 @@ export function useEventLogger({ user, enabled = true }: UseEventLoggerOptions) 
         eventType,
         listenedDuration
       );
-      
+
       await logEvent(payload);
       lastEventTypeRef.current = eventType;
-      
+
       // Reset start time after logging
       playStartTimeRef.current = currentTime;
     } catch (error) {
@@ -81,7 +84,7 @@ export function useEventLogger({ user, enabled = true }: UseEventLoggerOptions) 
     if (!enabled || !user || !currentTrack) return;
 
     const seekDistance = Math.abs(toTime - fromTime);
-    
+
     // Only log significant seeks (> 5 seconds)
     if (seekDistance > 5) {
       try {
@@ -91,7 +94,7 @@ export function useEventLogger({ user, enabled = true }: UseEventLoggerOptions) 
           'seek',
           0 // Seek events don't have duration
         );
-        
+
         logEvent(payload);
         playStartTimeRef.current = toTime;
       } catch (error) {
@@ -108,9 +111,63 @@ export function useEventLogger({ user, enabled = true }: UseEventLoggerOptions) 
   };
 
   /**
-   * Reset when track changes
+   * Auto-detect play/pause state changes and log events
    */
   useEffect(() => {
+    if (!enabled || !user || !currentTrack) return;
+
+    // Detect play/pause transitions
+    if (isPlaying !== wasPlayingRef.current) {
+      if (isPlaying) {
+        // Started playing
+        handlePlay();
+      } else {
+        // Paused
+        handlePause();
+      }
+      wasPlayingRef.current = isPlaying;
+    }
+  }, [isPlaying, enabled, user, currentTrack]);
+
+  /**
+   * Auto-detect skip (queue index change with different track)
+   */
+  useEffect(() => {
+    if (!enabled || !user) return;
+
+    // If queue index changed and we had a previous track, it's a skip
+    if (queueIndex !== lastQueueIndexRef.current && lastTrackIdRef.current !== null) {
+      // Only log skip if it wasn't a natural track end (we were still playing)
+      if (wasPlayingRef.current && currentTrack && lastTrackIdRef.current !== currentTrack.id) {
+        // This was a manual skip - log it for the PREVIOUS track
+        const logSkipForPreviousTrack = async () => {
+          if (!user) return;
+          try {
+            const payload = createEventPayload(
+              user.id,
+              lastTrackIdRef.current!,
+              'skip',
+              currentTime > 0 ? currentTime : 0
+            );
+            await logEvent(payload);
+          } catch (error) {
+            console.error('[Event Logger] Failed to log skip event:', error);
+          }
+        };
+        logSkipForPreviousTrack();
+      }
+    }
+
+    lastQueueIndexRef.current = queueIndex;
+  }, [queueIndex, enabled, user, currentTrack]);
+
+  /**
+   * Track current track ID changes for skip detection
+   */
+  useEffect(() => {
+    if (currentTrack) {
+      lastTrackIdRef.current = currentTrack.id;
+    }
     playStartTimeRef.current = 0;
     lastEventTypeRef.current = null;
   }, [currentTrack?.id]);
