@@ -93,8 +93,13 @@ def ml_status():
     """Check ML service status."""
     try:
         service = get_musicfm_service()
+        
+        # User requested: Check if model exists physically, don't force load
+        # If files exist, report "ready" (it will lazy load on first use)
+        is_available = service.is_ready() or os.path.exists(service.model_path)
+        
         return {
-            "status": "ready" if service.is_ready() else "not_loaded",
+            "status": "ready" if is_available else "not_loaded",
             "device": service.device,
             "model_path": service.model_path
         }

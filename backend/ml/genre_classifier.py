@@ -357,7 +357,7 @@ def get_genre_classifier() -> GenreClassifier:
         
         _classifier_instance = GenreClassifier(
             n_clusters=8,
-            centroids_path=str(centroids_path) if centroids_path.exists() else None,
+            centroids_path=str(centroids_path), # Always pass path so we can save to it
             probe_path=str(probe_path) if probe_path.exists() else None
         )
     return _classifier_instance

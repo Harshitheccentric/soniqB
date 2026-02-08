@@ -164,3 +164,42 @@
     justify-content: space-between;
   }
 }
+
+/* ML Status Indicator */
+.model-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  transition: all 0.2s ease;
+  cursor: help;
+}
+
+.model-status:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.model-status--ready {
+  border-color: var(--color-success);
+  background: rgba(var(--color-success-rgb), 0.1);
+}
+
+.model-status--error {
+  border-color: var(--color-error);
+  background: rgba(var(--color-error-rgb), 0.1);
+}
+
+.model-status--loading {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

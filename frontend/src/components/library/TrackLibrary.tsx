@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from '../../hooks/useSession';
 import type { Track } from '../../types';
 import { useAlert } from '../../context/AlertContext';
-import { deletePlaylist, generatePersonalizedPlaylist } from '../../api/musicApi';
+import { deletePlaylist, generatePersonalizedPlaylist, deleteTrack } from '../../api/musicApi';
 import ContextMenu from '../common/ContextMenu';
 import AddToPlaylistModal from '../common/AddToPlaylistModal';
 import RenamePlaylistModal from '../common/RenamePlaylistModal';
@@ -134,6 +134,75 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
         }
     };
 
+    const handleDeletePlaylist = async () => {
+        if (!contextMenuPlaylist) return;
+
+        showAlert({
+            title: 'Are you sure?',
+            description: `This will permanently delete the playlist "${contextMenuPlaylist.name}". This action cannot be undone.`,
+            cancelLabel: 'Cancel',
+            actions: [
+                {
+                    label: 'Yes, delete playlist',
+                    variant: 'danger',
+                    onClick: async () => {
+                        try {
+                            await deletePlaylist(contextMenuPlaylist.id);
+                            closeAlert(); // Close the modal
+                            // Show success alert
+                            setTimeout(() => {
+                                showAlert({ title: 'Success', description: `Deleted playlist "${contextMenuPlaylist.name}"` });
+                            }, 300);
+                            fetchData();
+                        } catch (err) {
+                            console.error('Failed to delete playlist', err);
+                            showAlert({ title: 'Error', description: 'Failed to delete playlist' });
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
+    const handleDeleteTrack = async () => {
+        // Removed session.token check as it's often null in identity-anchoring mode
+        // musicApi handles authentication via X-User-ID or stored token
+        if (!contextMenuTrack) return;
+
+        showAlert({
+            title: 'Delete Song?',
+            description: `Are you sure you want to permanently delete "${contextMenuTrack.title}"? This cannot be undone.`,
+            cancelLabel: 'Cancel',
+            actions: [
+                {
+                    label: 'Yes, Delete',
+                    variant: 'danger',
+                    onClick: async () => {
+                        try {
+                            await deleteTrack(contextMenuTrack.id);
+
+                            closeAlert();
+
+                            // Visual feedback
+                            showAlert({ title: 'Deleted', description: 'Track deleted successfully' });
+
+                            // Refresh current view
+                            if (selectedPlaylist) {
+                                openPlaylist(selectedPlaylist);
+                            }
+                            // Always refresh main list too
+                            fetchData();
+
+                        } catch (err) {
+                            console.error('Failed to delete track', err);
+                            showAlert({ title: 'Error', description: 'Failed to delete track' });
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
     const closePlaylist = () => {
         setSelectedPlaylist(null);
     };
@@ -196,6 +265,11 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                                 key={track.id}
                                 className="track-library__item"
                                 onClick={() => playTrackFromPlaylist(track)}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    setContextMenuTrack(track);
+                                    setContextMenu({ visible: true, x: e.clientX, y: e.clientY });
+                                }}
                             >
                                 <span className="track-library__number">{index + 1}</span>
                                 <div className="track-library__icon">
@@ -217,6 +291,47 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                         ))}
                     </div>
                 )}
+
+                {/* Context Menu for Playlist Detail */}
+                <ContextMenu
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    visible={contextMenu.visible}
+                    onClose={() => setContextMenu({ ...contextMenu, visible: false })}
+                    items={[
+                        {
+                            label: 'Play',
+                            icon: '▶️',
+                            onClick: () => contextMenuTrack && playTrackFromPlaylist(contextMenuTrack)
+                        },
+                        /* Delete option for uploaded tracks */
+                        ...(contextMenuTrack && contextMenuTrack.uploaded_by_user_id === session.user?.id ? [{
+                            label: 'Delete Song',
+                            icon: '🗑️',
+                            onClick: handleDeleteTrack
+                        }] : []),
+                        /* Remove from Playlist option */
+                        ...(selectedPlaylist && (selectedPlaylist.type === 'manual' || selectedPlaylist.type === 'uploaded_songs') && contextMenuTrack ? [{
+                            label: 'Remove from Playlist',
+                            icon: '❌',
+                            divider: true,
+                            onClick: async () => {
+                                if (!contextMenuTrack || !selectedPlaylist) return;
+                                try {
+                                    await fetch(`http://localhost:8000/playlists/${selectedPlaylist.id}/tracks/${contextMenuTrack.id}`, {
+                                        method: 'DELETE'
+                                    });
+                                    // Refresh playlist
+                                    openPlaylist(selectedPlaylist);
+                                    showAlert({ title: 'Removed', description: 'Track removed from playlist' });
+                                } catch (err) {
+                                    console.error('Failed to remove track', err);
+                                    showAlert({ title: 'Error', description: 'Failed to remove track' });
+                                }
+                            }
+                        }] : [])
+                    ]}
+                />
             </div>
         );
     }
@@ -284,35 +399,6 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
     };
 
 
-    const handleDeletePlaylist = async () => {
-        if (!contextMenuPlaylist) return;
-
-        showAlert({
-            title: 'Are you sure?',
-            description: `This will permanently delete the playlist "${contextMenuPlaylist.name}". This action cannot be undone.`,
-            cancelLabel: 'Cancel',
-            actions: [
-                {
-                    label: 'Yes, delete playlist',
-                    variant: 'danger',
-                    onClick: async () => {
-                        try {
-                            await deletePlaylist(contextMenuPlaylist.id);
-                            closeAlert(); // Close the modal
-                            // Show success alert
-                            setTimeout(() => {
-                                showAlert({ title: 'Success', description: `Deleted playlist "${contextMenuPlaylist.name}"` });
-                            }, 300);
-                            fetchData();
-                        } catch (err) {
-                            console.error('Failed to delete playlist', err);
-                            showAlert({ title: 'Error', description: 'Failed to delete playlist' });
-                        }
-                    }
-                }
-            ]
-        });
-    };
 
     // Main Library View
     return (
@@ -483,11 +569,11 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                         icon: '✏️',
                         onClick: () => setShowRenameModal(true)
                     },
-                    {
+                    ...(contextMenuPlaylist.type !== 'uploaded_songs' && contextMenuPlaylist.type !== 'liked_songs' ? [{
                         label: 'Delete',
                         icon: '🗑️',
                         onClick: handleDeletePlaylist
-                    }
+                    }] : [])
                 ] : [
                     {
                         label: 'Add to playlist...',
@@ -501,7 +587,13 @@ export default function TrackLibrary({ onTrackSelect }: TrackLibraryProps) {
                         label: 'Play',
                         icon: '▶️',
                         onClick: () => contextMenuTrack && onTrackSelect(contextMenuTrack, tracks)
-                    }
+                    },
+                    /* Delete option for uploaded tracks */
+                    ...(contextMenuTrack && contextMenuTrack.uploaded_by_user_id === session.user?.id ? [{
+                        label: 'Delete Song',
+                        icon: '🗑️',
+                        onClick: handleDeleteTrack
+                    }] : [])
                 ]}
             />
 

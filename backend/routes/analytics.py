@@ -5,6 +5,7 @@ Endpoints for user listening analysis and library visualization.
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Dict, List, Any
+import os
 import numpy as np
 from sklearn.decomposition import PCA
 
@@ -65,36 +66,91 @@ def get_library_map(db: Session = Depends(get_db)):
     Get 2D coordinates for all tracks in library for visualization.
     Uses PCA/t-SNE on MusicFM embeddings.
     """
-    # Check for cache
-    import os
-    import json
-    cache_path = "backend/ml/data/library_map.json"
-    
-    if os.path.exists(cache_path):
-        with open(cache_path, 'r') as f:
-            return json.load(f)
-            
-    # Compute on fly (slow but necessary for first run)
-    tracks = db.query(Track).filter(Track.predicted_genre.isnot(None)).all()
-    service = get_musicfm_service()
-    
     points = []
-    skipped = 0
     
-    # For speed in this demo, let's generate semi-random clusters based on genre
-    # Real embeddings are heavy to load all at once without vector DB
+    # Force Real Data Mode - Ignore Cache
+    embedding_path = "backend/ml/data/track_embeddings.npy"
+    id_path = "backend/ml/data/track_ids.npy"
     
-    # Simulation: 
-    # Create genre centers in 2D space
+    # Try Real Data First
+    if os.path.exists(embedding_path) and os.path.exists(id_path):
+        try:
+            print("Loading real embeddings...")
+            embeddings_np = np.load(embedding_path)
+            track_ids_np = np.load(id_path)
+            
+            # Create map with NATIVE INT keys to ensure matching with DB IDs
+            track_id_map = {int(id): i for i, id in enumerate(track_ids_np)}
+            
+            print(f"Loaded {len(embeddings_np)} embeddings. Running PCA...")
+            from sklearn.decomposition import PCA
+            pca = PCA(n_components=2)
+            coords_2d = pca.fit_transform(embeddings_np)
+            
+            # Normalize
+            max_val = np.max(np.abs(coords_2d))
+            if max_val > 0:
+                coords_2d = coords_2d / max_val
+            
+            # Match back to DB tracks
+            tracks = db.query(Track).filter(Track.id.in_([int(i) for i in track_ids_np])).all()
+            print(f"Found {len(tracks)} matching tracks in DB.")
+            
+            for t in tracks:
+                if t.id not in track_id_map:
+                    continue
+                    
+                idx = track_id_map[t.id]
+                x, y = coords_2d[idx]
+                
+                # Add slight jitter
+                import random
+                x += random.gauss(0, 0.02)
+                y += random.gauss(0, 0.02)
+                
+                points.append({
+                    "id": t.id,
+                    "title": t.title,
+                    "artist": t.artist,
+                    "genre": t.predicted_genre or "Unknown",
+                    "x": float(x),
+                    "y": float(y),
+                })
+            
+            print(f"Successfully generated {len(points)} map points from REAL data.")
+            return {"points": points, "genres": []}
+            
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"CRITICAL ERROR in Real Data Mode: {e}")
+            # Fallthrough to simulation only on crash
+            
+    # --- SIMULATION FALLBACK (If no cache) ---
+    tracks = db.query(Track).filter(Track.predicted_genre.isnot(None)).all()
+    
+    # Expanded Simulation Centers to match more folders
     genre_centers = {
-        "Pop": [0.2, 0.2],
+        "Pop": [0.3, 0.3],
+        "pop": [0.3, 0.3],
         "Rock": [-0.5, 0.5],
+        "rock": [-0.5, 0.5],
         "Hip-Hop": [-0.2, -0.6],
+        "hip-hop": [-0.2, -0.6],
         "Electronic": [0.6, -0.3],
+        "electronic": [0.6, -0.3],
         "Classical": [0.8, 0.8],
         "Jazz": [0.4, 0.6],
         "Metal": [-0.8, 0.2],
         "Country": [-0.3, 0.1],
+        "Folk": [0.1, 0.7],
+        "folk": [0.1, 0.7],
+        "Instrumental": [0.7, 0.2],
+        "instrumental": [0.7, 0.2],
+        "International": [0.0, -0.8],
+        "international": [0.0, -0.8],
+        "Experimental": [-0.6, -0.6],
+        "experimental": [-0.6, -0.6],
         "Unknown": [0, 0]
     }
     
@@ -102,8 +158,11 @@ def get_library_map(db: Session = Depends(get_db)):
     
     for t in tracks:
         genre = t.predicted_genre or "Unknown"
-        center = genre_centers.get(genre, [0, 0])
-        
+        # Try exact match, then Title Case, then fallback
+        center = genre_centers.get(genre)
+        if not center:
+             center = genre_centers.get(genre.capitalize(), [0, 0])
+             
         # Add noise
         x = center[0] + random.gauss(0, 0.15)
         y = center[1] + random.gauss(0, 0.15)
@@ -114,11 +173,7 @@ def get_library_map(db: Session = Depends(get_db)):
             "artist": t.artist,
             "genre": genre,
             "x": x,
-            "y": y,
-            "features": {
-                "energy": random.random(), # Simulated for visualization size/color
-                "valence": random.random()
-            }
+            "y": y
         })
         
     return {

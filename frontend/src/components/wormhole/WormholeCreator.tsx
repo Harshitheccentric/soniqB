@@ -11,7 +11,7 @@ interface WormholeCreatorProps {
     onSetSelectionMode: (mode: 'start' | 'end' | null) => void;
     onGenerate: (path: any[]) => void;
     onClose: () => void;
-    path: any[]; // The generated path
+    path: any[]; // The generated path (for visualization)
 }
 
 export default function WormholeCreator({
@@ -28,6 +28,8 @@ export default function WormholeCreator({
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    // Store original API tracks for saving (path prop may be filtered)
+    const [originalTracks, setOriginalTracks] = useState<any[]>([]);
 
     const handleGenerate = async () => {
         if (!startNode || !endNode) return;
@@ -42,6 +44,9 @@ export default function WormholeCreator({
                     steps: 8
                 }
             });
+            // Store original tracks for saving
+            setOriginalTracks(res.data);
+            // Pass to parent for visualization
             onGenerate(res.data);
         } catch (err) {
             console.error("Wormhole generation failed", err);
@@ -52,7 +57,11 @@ export default function WormholeCreator({
     };
 
     const handleSavePlaylist = async () => {
-        if (!path || path.length === 0) return;
+        if (!originalTracks || originalTracks.length === 0) return;
+        if (!session.user) {
+            alert("You must be logged in to save playlists.");
+            return;
+        }
 
         if (!session?.user?.id) {
             showToast('Please log in to save playlists', 'error');
@@ -61,21 +70,30 @@ export default function WormholeCreator({
 
         setSaving(true);
         try {
+            // Generate a creative name
+            const startGenre = startNode.genre || 'Unknown';
+            const endGenre = endNode.genre || 'Unknown';
+            const playlistName = startGenre === endGenre
+                ? `${startGenre} Journey: ${originalTracks.length} Tracks`
+                : `${startGenre} → ${endGenre} Wormhole`;
+
             const payload = {
                 user_id: session.user.id,
-                name: `Wormhole: ${startNode.title} to ${endNode.title}`,
-                tracks: path.map((node, index) => ({
-                    track_id: node.id,
+                name: playlistName,
+                tracks: originalTracks.map((track, index) => ({
+                    track_id: track.id,
                     position: index
                 }))
             };
 
+            console.log('Saving playlist with tracks:', originalTracks.length, payload);
+
             await api.post('/playlists/manual', payload);
             setSaved(true);
-            showToast('Playlist saved successfully!', 'success');
+            showToast(`Playlist saved with ${originalTracks.length} tracks! Check your Library.`, 'success');
         } catch (err) {
             console.error("Failed to save playlist", err);
-            showToast('Failed to save playlist', 'error');
+            showToast("Failed to save playlist. Please try again.", 'error');
         } finally {
             setSaving(false);
         }
@@ -120,14 +138,26 @@ export default function WormholeCreator({
                 {generating ? 'Calculating Path...' : 'Engage Wormhole'}
             </button>
 
-            {path.length > 0 && (
-                <button
-                    className="wormhole-save-btn"
-                    onClick={handleSavePlaylist}
-                    disabled={saving || saved}
-                >
-                    {saved ? 'Playlist Saved ✓' : saving ? 'Saving...' : 'Save Path as Playlist'}
-                </button>
+            {originalTracks.length > 0 && (
+                <>
+                    <div className="wormhole-path-info" style={{
+                        padding: '8px',
+                        margin: '8px 0',
+                        background: 'rgba(111, 255, 176, 0.1)',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        color: '#6fffb0'
+                    }}>
+                        📍 Path found: {originalTracks.length} tracks
+                    </div>
+                    <button
+                        className="wormhole-save-btn"
+                        onClick={handleSavePlaylist}
+                        disabled={saving || saved}
+                    >
+                        {saved ? 'Playlist Saved ✓' : saving ? 'Saving...' : `Save ${originalTracks.length} Tracks as Playlist`}
+                    </button>
+                </>
             )}
         </div>
     );

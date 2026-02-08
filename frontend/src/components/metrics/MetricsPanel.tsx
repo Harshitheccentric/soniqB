@@ -89,9 +89,11 @@ export default function MetricsPanel({ userId }: MetricsPanelProps) {
               <XAxis dataKey="type" stroke="var(--color-text-secondary)" />
               <YAxis stroke="var(--color-text-secondary)" />
               <Tooltip
+                cursor={{ fill: 'var(--glow-secondary)' }}
                 contentStyle={{
-                  background: 'white',
-                  border: '1px solid var(--pale-slate)',
+                  background: 'var(--bg-card-solid)',
+                  color: 'var(--color-text-primary)',
+                  border: '1px solid var(--border-medium)',
                   borderRadius: 'var(--radius-md)',
                 }}
               />
