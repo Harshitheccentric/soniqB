@@ -45,7 +45,18 @@ Visualize your entire collection as a cosmic map.
 - **Node.js** (v18+)
 - **FFmpeg** (For real-time audio processing/transcoding)
 
-### 1. Download Required Assets
+### 1. Project Initialization & Submodules
+SoniqB uses Git Submodules for external components like **MusicFM**.
+
+```bash
+# To clone the repository with submodules:
+git clone --recursive https://github.com/Harshitheccentric/soniqB.git
+
+# Or if you have already cloned it:
+git submodule update --init --recursive
+```
+
+### 2. Download Required Assets
 Before starting, you must populate the data directories (excluded from Git due to size).
 
 | Asset | Source | Destination |

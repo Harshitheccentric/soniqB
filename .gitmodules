@@ -1,0 +1,3 @@
+[submodule "backend/ml/musicfm"]
+	path = backend/ml/musicfm
+	url = https://github.com/minzwon/musicfm
