@@ -6,101 +6,63 @@ A music player application designed to support future machine-learning–based p
 
 ---
 
-## Project Phases
-
-### ✅ Phase 1: Backend (Complete)
-Clean FastAPI backend with explicit event logging.
-
-### ✅ Phase 2: Frontend (Complete)
-React UI that consumes backend APIs and logs user interactions.
-
-### ✅ Phase 3: ML Integration & Recommendations (Complete)
-Implemented audio embedding extraction (MusicFM), genre classification, user clustering, and a recommendation engine.
-
----
-
 ## Core Features
 
-### 1. Recommendation Engine (`backend/ml/recommender.py`)
-- **Next Song**: Multi-stage recommendation using KNN (Cosine Similarity) on MusicFM embeddings (1024-dim).
-- **Diversity Control**: Automatic filtering of recent history and genre-weighted sampling to prevent "filter bubbles."
-- **Playlist Generation**: Seed-based generation using cluster mean vector analysis.
+### 1. AI-Powered Recommendation Engine
+The project features a multi-stage recommendation system that moves beyond simple metadata matching to deep sonic analysis.
+- **MusicFM Embeddings**: Every track is processed by a **MusicFM foundation model** to extract 1024-dimensional semantic audio embeddings, capturing rhythm, timbre, and mood.
+- **Sonic Similarity (KNN)**: Uses K-Nearest Neighbors (Cosine Similarity) to find the most sonically relevant next track in the high-dimensional vector space.
+- **Intelligent Diversity Control**: Prevents "filter bubbles" by incorporating a diversity shuffle. It automatically filters recent listening history and uses genre-weighted sampling to ensure a fresh experience.
+- **Personalized Mix Generation**: Leverages user preference vectors to generate cohesive playlists that bridge diverse genres smoothly.
 
-### 2. Listening Intelligence (Analysis)
-An advanced psychological profiling system that transforms raw playback events into high-level archetypes:
+### 2. Listening Intelligence (Psychological Profiling)
+Transforming raw data into meaningful human insights through advanced analytics:
+- **Archetype Profiling**: Uses **K-Means Clustering** to categorize listeners into four psychological archetypes:
+    - **Explorer**: High genre diversity, frequent skips, and broad discovery.
+    - **Enthusiast**: Heavy engagement, high like-ratio, and long session durations.
+    - **Niche Fan**: Focused preferences with deep loyalty to specific genres.
+    - **Casual Listener**: Low-frequency, relaxed listening habits.
+- **Explainable Analytics**: The system uses Z-score attribution to explain *why* a user is assigned a specific archetype (e.g., "High Genre Diversity -> Eclectic Taste").
+- **Library Galaxy**: A spatial 2D map of your music library. Using **Principal Component Analysis (PCA)**, the system reduces high-dimensional audio embeddings into a navigable star-map where similar-sounding songs cluster together.
 
-- **Archetype Profiling**: Categorizes users as *Explorer*, *Deep Diver*, *Enthusiast*, or *Casual* based on genre entropy, skip rates, and session frequency.
-- **Library Galaxy**: A 2D spatial visualization (simulated PCA/UMAP) of the user's music library, clustered by sonic similarity and genre.
-
----
-
-## Technical Implementation Breakdown
-
-### 1. Data Processing Layer (`backend/ml/user_clustering.py`)
-The `UserClusterAnalyzer` performs feature engineering on the `listening_events` table:
-- **Genre Diversity**: Calculated as the entropy of the user's genre distribution (using Shannon Entropy). 
-- **User Vector**: Aggregates total plays, average duration, like/skip ratios, and session frequency.
-
-### 2. Machine Learning Layer
-- **Embeddings**: Utilizes the **MusicFM foundation model** for extracting semantic audio features.
-- **Classification**: Tracks are automatically assigned genres via a linear probe on top of frozen embeddings.
-
-### 3. API Architecture (`backend/routes/`)
-- `GET /analytics/profile`: Authenticated endpoint returning user archetype and trait stats.
-- `GET /analytics/map`: Generates 2D coordinates for library visualization.
-- `GET /recommendations/next`: Fetches the most sonically relevant next track.
+### 3. Real-Time ML Labeling
+- **Automated Genre Tagging**: Every uploaded track is instantly analyzed using a trained **Linear Probe** on top of frozen MusicFM embeddings, providing high-precision genre predictions without manual metadata.
+- **Library Integrity**: Deep-scans the local storage to index and classify existing tracks, creating a unified sonic database.
 
 ---
 
-## Project Structure
+## Setup Instructions
 
-```
-soniqB/
-├── backend/              # FastAPI backend
-│   ├── main.py          # Application entry point
-│   ├── ml/              # Machine Learning modules
-│   │   ├── recommender.py     # KNN Recommendation Engine
-│   │   ├── user_clustering.py # Feature engineering & archetypes
-│   │   ├── service.py         # MusicFM embedding service
-│   │   └── genre_classifier.py # Genre prediction logic
-│   ├── routes/          # API endpoints
-│   │   ├── analytics.py      # Dashboard data
-│   │   ├── recommendations.py # Rec engine endpoints
-│   │   └── ...
-│   └── storage/audio/   # Local audio files
-│
-├── frontend/            # React frontend
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Analysis.tsx  # Intelligence Dashboard
-│   │   │   └── Home.tsx      # Main Player UI
-│   │   └── components/       
-│   └── vite.config.ts    # API Proxy configuration
-```
+### Prerequisites
+- **Python 3.11** (Required)
+- **Node.js** (v18+)
+- **FFmpeg** (For audio processing)
 
----
+### 1. Model Data Setup
+Download the `data` folder from the link below and place it inside `backend/ml/`:
+- **Data Folder**: [Google Drive Link](https://drive.google.com/drive/folders/1tsjBzZWrRj-w6MZuf1g2QKUBZnbZ6ZUf?usp=sharing)
+- *The final path should be `backend/ml/data/` containing the `.pt` and `.json` files.*
 
-## Quick Start
+### 2. Audio Storage Setup
+Download the `storage` folder from the link below and place it inside the `backend/` directory:
+- **Storage Folder**: [Google Drive Link](https://drive.google.com/drive/folders/1fKa6H0t23bDW7qhOvUUXZWim9EJmeXVK?usp=sharing)
+- *The final path should be `backend/storage/tracks/` containing genre subfolders.*
 
-### 1. Start Backend
+### 3. Start Backend
 ```bash
 cd backend
-python3 -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
-python seed_data.py  # Seeds dummy history for analytics
-uvicorn backend.main:app --reload
+cd ..
+python seed_enhanced.py  # Initialize database and seed library
+uvicorn backend.main:app --reload --port 8000
 ```
 
-### 2. Start Frontend
+### 4. Start Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
----
-
-## Development Status
-**Current Status:** Phases 1, 2, & 3 Complete  
-**Last Updated:** January 2026
