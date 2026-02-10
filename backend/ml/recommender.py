@@ -57,9 +57,11 @@ class TrackRecommender:
         
         # actually, let's just use what we have.
         # Check if we have a precomputed embedding file
+        from pathlib import Path
         import os
-        embedding_cache_path = "backend/ml/data/track_embeddings.npy"
-        id_cache_path = "backend/ml/data/track_ids.npy"
+        ml_dir = Path(__file__).parent
+        embedding_cache_path = str(ml_dir / "data/track_embeddings.npy")
+        id_cache_path = str(ml_dir / "data/track_ids.npy")
         
         if os.path.exists(embedding_cache_path) and os.path.exists(id_cache_path):
             self._embeddings = np.load(embedding_cache_path)

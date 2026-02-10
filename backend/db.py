@@ -123,8 +123,8 @@ def seed_database():
                     title = re.sub(r'\s*\[.*?\]', '', title).strip()
                     
                     # Create track
-                    # STRICT GENRE MODE: Confidence is simulated between 80-95%
-                    confidence = random.uniform(0.80, 0.95)
+                    # STRICT GENRE MODE: Confidence is 1.0 (Manual)
+                    confidence = 1.0
                     
                     track = Track(
                         title=title,
