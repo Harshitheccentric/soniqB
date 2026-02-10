@@ -1,15 +1,30 @@
-# Python
+# Environment
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.local
+
+# ML Data & Storage (Downloaded separately)
+backend/storage/
+backend/ml/data/
+backend/fma/
+backend/ml-old/
+modelCheck/
+
+# Python / Build
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-venv/
-env/
-ENV/
 *.egg-info/
 dist/
 build/
+*.tmp
+*.bak
+.cache/
 
 # Database
 *.db
@@ -17,21 +32,14 @@ build/
 *.sqlite3
 soniq.db
 
-# IDE
+# IDE / OS
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
-
-# Logs
-*.log
-logs/
-
-# Environment variables
-.env
-.env.local
+Thumbs.db
 
 # Node.js / Frontend
 node_modules/
@@ -42,26 +50,3 @@ frontend/build/
 .yarn
 package-lock.json
 yarn.lock
-
-# Audio files (optional - uncomment if you don't want to commit audio)
-# backend/storage/audio/*.mp3
-# backend/storage/audio/*.wav
-# backend/storage/audio/*.ogg
-
-# Temporary files
-*.tmp
-*.bak
-.cache/
-
-# OS
-Thumbs.db
-
-# FMA Dataset (large files)
-backend/fma/fma_metadata/
-backend/fma/fma_small/
-
-# ML Model data and weights (large binary files)
-backend/storage
-backend/ml/data
-backend/ml-old
-modelCheck/*
