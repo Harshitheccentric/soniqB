@@ -1,5 +1,5 @@
 """
-ML Service Module for SoniqB - Phase 3
+ML Service Module for SoniqB - Phase 3 (Standalone)
 Provides audio embedding extraction using MusicFM foundation model.
 """
 import os
@@ -12,7 +12,7 @@ import numpy as np
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Add MusicFM to path
+# Add MusicFM to path - Modified for standalone
 ML_DIR = Path(__file__).parent.absolute()
 MUSICFM_DIR = ML_DIR / "musicfm"
 sys.path.insert(0, str(ML_DIR))
@@ -53,9 +53,9 @@ class MusicFMService:
             device: Device to run model on ('cpu', 'cuda', or None for auto)
             lazy_load: If True, defer model loading until first use
         """
-        # Set default paths
-        self.stat_path = stat_path or str(ML_DIR / "data" / "fma_stats.json")
-        self.model_path = model_path or str(ML_DIR / "data" / "pretrained_fma.pt")
+        # Set default paths - Adjusted for standalone flat structure
+        self.stat_path = stat_path or str(ML_DIR / "data/fma_stats.json")
+        self.model_path = model_path or str(ML_DIR / "data/CRNN.pt")
         
         # Determine device
         if device is None:
@@ -85,7 +85,7 @@ class MusicFMService:
             raise FileNotFoundError(f"Model file not found: {self.model_path}")
         
         try:
-            # Import MusicFM model class
+            # Import MusicFM model class - Modified path
             from musicfm.model.musicfm_25hz import MusicFM25Hz
             
             # Load model

@@ -191,8 +191,8 @@ def scan_library(db: Session = Depends(get_db)):
             # Skip "uploads" as it's a staging area
             if top_folder != "uploads" and top_folder != "audio":
                  current_genre = top_folder.lower()
-                 # User request: Random confidence between 80-95% for seeded tracks
-                 genre_confidence = random.uniform(0.8, 0.95)
+                 # Use high confidence (1.0) since folder structure implies manual sorting
+                 genre_confidence = 1.0
 
         for file in files:
             ext = os.path.splitext(file)[1].lower()
@@ -210,7 +210,7 @@ def scan_library(db: Session = Depends(get_db)):
                 if current_genre:
                     # Always update if we find it in a genre folder, per user request
                     exists.predicted_genre = current_genre
-                    exists.genre_confidence = random.uniform(0.8, 0.95)
+                    exists.genre_confidence = 1.0
                     added += 1 # Counting updates as activity
                 continue
                 
@@ -319,8 +319,7 @@ async def upload_track(
         pred_genre, pred_conf = classifier.classify_audio_file(str(file_path))
         if pred_genre:
             genre = pred_genre
-            # User request: Random confidence between 65-90% with mode at 75%
-            confidence = random.triangular(0.65, 0.90, 0.75)
+            confidence = pred_conf
     except Exception as e:
         print(f"Warning: Genre classification failed: {e}")
         # Fallback to Unknown

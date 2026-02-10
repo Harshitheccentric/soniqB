@@ -64,3 +64,4 @@ backend/fma/fma_small/
 backend/storage
 backend/ml/data
 backend/ml-old
+modelCheck/*

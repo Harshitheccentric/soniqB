@@ -1,5 +1,5 @@
 """
-Genre Classification Module for SoniqB - Phase 3
+Genre Classification Module for SoniqB - Phase 3 (Standalone)
 
 Uses MusicFM embeddings to classify music tracks into genres.
 Since we're using a foundation model (not a fine-tuned classifier),
@@ -24,7 +24,8 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
-from backend.ml.service import get_musicfm_service
+# Adjusted import for standalone
+from service import get_musicfm_service
 
 logger = logging.getLogger(__name__)
 
@@ -350,10 +351,10 @@ def get_genre_classifier() -> GenreClassifier:
         ml_dir = Path(__file__).parent
         
         # Check for trained probe (preferred)
-        probe_path = ml_dir / "data" / "musicfm_probe.pt"
+        probe_path = ml_dir / "data/musicfm_probe.pt"
         
         # Check for pre-computed centroids (fallback)
-        centroids_path = ml_dir / "data" / "genre_centroids.json"
+        centroids_path = ml_dir / "data/genre_centroids.json"
         
         _classifier_instance = GenreClassifier(
             n_clusters=8,

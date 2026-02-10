@@ -1,5 +1,5 @@
 """
-Combined Recurrent Genre Classifier Model for SoniqB - Phase 3
+Combined Recurrent Genre Classifier Model for SoniqB - Phase 3 (Standalone)
 
 This is a custom CNN+LSTM model that directly classifies audio into 8 FMA genres.
 Architecture matches checkpoint_combinedrecurrent.pt exactly.
@@ -160,12 +160,60 @@ class CombinedRecurrentClassifier(nn.Module):
         return logits
 
 
+class RecurrentClassifier2D(nn.Module):
+    """
+    2D-only CNN + LSTM classifier.
+    Architecture matches checkpoint_recurrent.pt.
+    """
+    def __init__(self, num_classes=8):
+        super().__init__()
+        self.conv_block = ConvBlock2D()
+        
+        # LSTM input size is 128 (output of ConvBlock2D)
+        self.lstm = nn.LSTM(
+            input_size=128,
+            hidden_size=128,
+            batch_first=True
+        )
+        
+        self.classifier = nn.Linear(128, num_classes)
+
+    def forward(self, waveform, mel_spec):
+        """
+        Args:
+            waveform: Ignored (kept for API compatibility)
+            mel_spec: (batch, 1, n_mels, time)
+        """
+        # (B, 1, F, T) -> (B, 128, T)
+        feat = self.conv_block(mel_spec) 
+        
+        feat = feat.squeeze(2) 
+        
+        # Global pooling over frequency is already done by AdaptiveAvgPool in ConvBlock2D
+        # Wait, ConvBlock2D ends with AdaptiveAvgPool2d((1, None))
+        # So output of ConvBlock2D is (B, 128, 1, T)
+        if feat.shape[-1] != 128:
+            # Just a sanity check for future maintenance
+            pass
+            
+        # LSTM expects (B, T, Features)
+        feat = feat.permute(0, 2, 1) # (B, T, 128)
+
+        # LSTM
+        lstm_out, _ = self.lstm(feat) # (B, T, 128)
+        
+        # Take last time step
+        lstm_out = lstm_out[:, -1, :] 
+        
+        return self.classifier(lstm_out)
+
+
 class RecurrentClassifierService:
     """Service wrapper for the Combined Recurrent Classifier."""
     
     def __init__(
         self,
-        model_path: str = "backend/ml/data/checkpoint_combinedrecurrent.pt",
+        model_path: str = "checkpoint_recurrent.pt", # Changed default
         sample_rate: int = 22050,
         duration: float = 30.0,
         device: str = "cpu"
@@ -192,12 +240,19 @@ class RecurrentClassifierService:
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"Model not found: {self.model_path}")
         
-        # Create model
-        self._model = CombinedRecurrentClassifier(num_classes=8)
+        # Determine architecture based on state dict keys
+        checkpoint = torch.load(self.model_path, map_location=self.device)
+        state_dict = checkpoint['model_state_dict'] if 'model_state_dict' in checkpoint else checkpoint
+        
+        if 'conv_block_1d.block.0.block.0.weight' in state_dict:
+            logger.info("Detected Combined (1D+2D) architecture")
+            self._model = CombinedRecurrentClassifier(num_classes=8)
+        else:
+            logger.info("Detected 2D-only architecture")
+            self._model = RecurrentClassifier2D(num_classes=8)
         
         # Load weights
-        checkpoint = torch.load(self.model_path, map_location=self.device)
-        self._model.load_state_dict(checkpoint['model_state_dict'])
+        self._model.load_state_dict(state_dict)
         self._model.to(self.device)
         self._model.eval()
         
@@ -257,7 +312,12 @@ def get_recurrent_classifier_service() -> RecurrentClassifierService:
     global _recurrent_service
     if _recurrent_service is None:
         ml_dir = Path(__file__).parent
-        model_path = ml_dir / "data" / "checkpoint_combinedrecurrent.pt"
+        # Prefer checkpoint_recurrent.pt if asked, but let's look for it
+        if (ml_dir / "data/checkpoint_recurrent.pt").exists():
+             model_path = ml_dir / "data/checkpoint_recurrent.pt"
+        else:
+             model_path = ml_dir / "data/checkpoint_combinedrecurrent.pt"
+
         _recurrent_service = RecurrentClassifierService(
             model_path=str(model_path),
             device="cpu"
